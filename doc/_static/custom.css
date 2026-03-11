@@ -1,0 +1,17 @@
+.py.class > .sig-object,
+.py.method > .sig-object{
+	padding: 2px;
+	background-color: #eee;
+}
+
+.py.class > .sig-object{
+	border-top: 1px solid #bbb;
+}
+
+.py.class aside{
+	margin-bottom: 15px;
+}
+
+p.topic-title{
+	margin-top: 0px;
+}
