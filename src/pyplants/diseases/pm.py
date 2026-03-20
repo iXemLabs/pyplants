@@ -6,7 +6,6 @@ from typing import Set
 from typing import Dict
 from typing import List
 from bisect import bisect_right
-from datetime import datetime
 from importlib.resources import read_text
 
 from pyplants.utils import UpdateCtx
@@ -37,24 +36,21 @@ class Gadoury(BaseDiseaseWithPhenology):
         :param phen_model: a grape phenological model
         """
         super().__init__(phen_model, (Gadoury.START_BBCH, Gadoury.END_BBCH))
-        # Init tmean and rainfall counters
-        self._temperatures = []
-        self._rain = 0
 
-    def _update_imp(self, dt: datetime, update_ctx: UpdateCtx):
+    def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with daily data.
 
         :param dt: datetime of the update
         :param update_ctx: update context with temperature and rain
         """
-        t = update_ctx.t
+        t = update_ctx.tmean
         r = update_ctx.rain
         # Check expert rules
         dis = r >= 2.5 and t >= 4 and t <= 27
         inf = dis and t >= 10
         # Store the event and convert bool to float for compatibility
         self._events.append(DiseaseEvent(
-            dt=dt,
+            dt=update_ctx.dt,
             spore_release=float(dis),
             infection=float(inf)
         ))
@@ -62,7 +58,7 @@ class Gadoury(BaseDiseaseWithPhenology):
     @property
     def update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
-        return {"t", "rain"}
+        return {"tmean", "rain"}
 
 
 class Moyer(BaseDisease):
@@ -86,7 +82,7 @@ class Moyer(BaseDisease):
         # Last computed ascospore period
         self._asc_p = 0
 
-    def _update_imp(self, dt: datetime, update_ctx: UpdateCtx):
+    def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with daily data.
 
         :param dt: datetime of the update
@@ -108,7 +104,7 @@ class Moyer(BaseDisease):
                 self._asc_p = 1 - exp(-exp(-3.335 + a + b))
             # Create the disease event and add asc_p as additional field
             self._events.append(DiseaseEvent(
-                dt=dt,
+                dt=update_ctx.dt,
                 spore_release=float(dis),
                 extra_fields={"asc_p": self._asc_p}
             ))
@@ -191,7 +187,7 @@ class DavisRI(BaseDiseaseWithPhenology):
         # Mills table instance
         self._mills_table = _MillsPM()
 
-    def _update_imp(self, dt: datetime, update_ctx: UpdateCtx):
+    def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with hourly data.
 
         :param dt: datetime of the update
@@ -200,7 +196,7 @@ class DavisRI(BaseDiseaseWithPhenology):
         self._leaf_wd.update(update_ctx.lw)
         # Append hourly temperature if the leaf is wet
         if self._leaf_wd.value > 0:
-            self._tmeans.append(update_ctx.t)
+            self._tmeans.append(update_ctx.tmean)
         else:
             self._tmeans.clear()
         # If no leaf wetness then we don't check mills
@@ -212,12 +208,15 @@ class DavisRI(BaseDiseaseWithPhenology):
             # ascospore discharge event
             risk = self._mills_table.get_risk(t, self._leaf_wd.value)
         # Add the event for compatibility cast mills risk in float
-        self._events.append(DiseaseEvent(dt=dt, spore_release=float(risk)))
+        self._events.append(DiseaseEvent(
+            dt=update_ctx.dt,
+            spore_release=float(risk)
+        ))
 
     @property
     def update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
-        return {"t", "lw"}
+        return {"tmean", "lw"}
 
 
 class Caffi(BaseDiseaseWithPhenology):
@@ -262,16 +261,16 @@ class Caffi(BaseDiseaseWithPhenology):
         """Detected infections with progression."""
         return self._inf_mng.infections
 
-    def _update_imp(self, dt: datetime, update_ctx: UpdateCtx):
+    def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with daily data.
 
         :param dt: update datetime
         :param update_ctx: update context using t, rain, lw
         """
         if self._phen_model.current_stage >= Caffi.START_BBCH:
-            t = update_ctx.t
+            t = update_ctx.tmean
             r = update_ctx.rain
-            lwd = update_ctx.lwd
+            lwd = update_ctx.lw
             vpd_d = update_ctx.vpd_h
             # Update growing degree days value
             self._dd += max(t - 10, 0)
@@ -306,20 +305,20 @@ class Caffi(BaseDiseaseWithPhenology):
                         # Evaluate colony on leaf
                         col = aol * inf
                         if col > 0:
-                            self._inf_mng.add_infection(dt)
+                            self._inf_mng.add_infection(update_ctx.dt)
                 self._events.append(DiseaseEvent(
-                    dt=dt,
+                    dt=update_ctx.dt,
                     spore_release=aol,
                     infection=col,
                     extra_fields={"par": par, "inf": inf}
                 ))
                 # Finally update the current active infections
-                self._inf_mng.update(dt, update_ctx)
+                self._inf_mng.update(update_ctx)
 
     @property
     def update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
-        return {"t", "rh", "rain", "lwd"}
+        return {"tmean", "rhmean", "rain", "lw"}
 
     class _InfectionLatencyUpdater(object):
         """Infection latency update strategy for caffi."""

@@ -1,19 +1,29 @@
 from math import exp
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
 class UpdateCtx:
-    """Update context for models.
+    """Update context.
 
-    Hold data used by model to perform update.
+    Contains data used by models to run the update.
     """
-    t: float = None
-    lw: bool = None
-    rh: float = None
-    lwd: float = None
-    rain: float = None
+    dt: datetime
+    # Leaf wetness
+    lw: int = None
+    # Temperature
+    tmean: float = None
     tmax: float = None
+    tmin: float = None
+    # Relative humidity
+    rhmean: float = None
+    rhmax: float = None
+    rhmin: float = None
+    # Rainfall
+    rain: int = None
+    # Timestep in use (hourly, daily)
+    step: str = "h"
 
     @property
     def vpd_h(self):
@@ -21,9 +31,11 @@ class UpdateCtx:
 
         :raise AttributeError: in case t or rh is not defined
         """
-        if self.t is None or self.rh is None:
-            raise AttributeError("Context is missing temperature or RH")
-        return vpd_h(self.t, self.rh)
+        if self.tmean is None:
+            raise AttributeError("Context is missing temperature")
+        if self.rhmean is None:
+            raise AttributeError("Context is missing relative humidity")
+        return vpd_h(self.tmean, self.rhmean)
 
 
 class LeafWetnessCounter(object):
@@ -50,12 +62,12 @@ class LeafWetnessCounter(object):
         """Read the current leaf wetness duration."""
         return self._leaf_wd
 
-    def update(self, lw: bool):
+    def update(self, lw: int):
         """Update the leaf wetness counter.
 
         :param lw: the current leaf wetness status
         """
-        if lw:
+        if lw == 1:
             self._leaf_wd += 1
             self._dry_period = 0
         else:

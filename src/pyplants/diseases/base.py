@@ -30,7 +30,7 @@ class BaseDisease(ABC):
         """
         return self._events
 
-    def update(self, dt: datetime, update_ctx: UpdateCtx):
+    def update(self, update_ctx: UpdateCtx):
         """Update the model using the specific model implementation.
 
         :param dt: update datetime object
@@ -42,7 +42,7 @@ class BaseDisease(ABC):
             if update_args[f] is None:
                 raise ValueError("Update context missing: %s" % f)
         # Call the implemented model update
-        self._update_imp(dt, update_ctx)
+        self._update_imp(update_ctx)
 
     @property
     @abstractmethod
@@ -69,7 +69,7 @@ class BaseDiseaseWithPhenology(BaseDisease):
         self._bbch_period = bbch_period
         self._phen_auto_update = False
 
-    def update(self, dt: datetime, update_ctx: UpdateCtx):
+    def update(self, update_ctx: UpdateCtx):
         """Update the model using the specific model implementation.
 
         If phen_auto_update is set to True update als the phenology model.
@@ -81,13 +81,13 @@ class BaseDiseaseWithPhenology(BaseDisease):
         :param update_ctx: update context with proper values
         """
         if self._phen_auto_update:
-            self._phen_model.update(dt, update_ctx)
+            self._phen_model.update(update_ctx)
         # Check phenology to be in range (if provided)
         if self._bbch_period is not None:
             cstage = self._phen_model.current_stage
             if cstage < self._bbch_period[0] or cstage > self._bbch_period[1]:
                 return
-        super().update(dt, update_ctx)
+        super().update(update_ctx)
 
 
 @dataclass(frozen=True)
@@ -154,7 +154,7 @@ class InfectionManager(object):
         """
         self._infections.append({"start": start, "end": False, "latency": 0})
 
-    def update(self, dt: datetime, update_ctx: UpdateCtx):
+    def update(self, update_ctx: UpdateCtx):
         """Update all the running infections.
 
         :param dt: datetime of the update context
@@ -166,4 +166,4 @@ class InfectionManager(object):
                 infection["latency"] += self._fn_update_lat(update_ctx)
                 # Close infection when latency expires
                 if infection["latency"] >= 1:
-                    infection["end"] = dt
+                    infection["end"] = update_ctx.dt
