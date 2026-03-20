@@ -1,6 +1,5 @@
 from abc import ABC
 from abc import abstractmethod
-from datetime import datetime
 
 from pyplants.utils import UpdateCtx
 from pyplants.phenology.scales import BBCHScale
@@ -26,10 +25,9 @@ class BasePhenology(ABC):
         return self._bbch
 
     @abstractmethod
-    def update(self, dt: datetime, update_ctx: UpdateCtx):
+    def update(self, update_ctx: UpdateCtx):
         """Abstract method to update the model.
 
-        :param dt: python datetime for provided sample
         :param update_ctx: update context for the implemented model
         """
         pass

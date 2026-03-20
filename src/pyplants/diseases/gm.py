@@ -1,6 +1,5 @@
 from math import exp
 from typing import Set
-from datetime import datetime
 
 from pyplants.utils import UpdateCtx
 from pyplants.utils import LeafWetnessCounter
@@ -30,10 +29,9 @@ class Broome(BaseDiseaseWithPhenology):
         # A leaf wetness counter
         self._leaf_wd = LeafWetnessCounter(dry_off=4)
 
-    def _update_imp(self, dt: datetime, update_ctx: UpdateCtx):
+    def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with hourly data.
 
-        :param dt: datetime of the update
         :param update_ctx: update context with temperature and leaf wetness
         """
         inf = 0
@@ -47,7 +45,7 @@ class Broome(BaseDiseaseWithPhenology):
                 - (0.001511 * w * (t ** 2))
             index = exp(index)
             inf = index / (1 + index)
-        self._events.append(DiseaseEvent(dt=dt, infection=inf))
+        self._events.append(DiseaseEvent(dt=update_ctx.dt, infection=inf))
 
     def update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""

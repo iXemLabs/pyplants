@@ -40,7 +40,6 @@ class Gadoury(BaseDiseaseWithPhenology):
     def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with daily data.
 
-        :param dt: datetime of the update
         :param update_ctx: update context with temperature and rain
         """
         t = update_ctx.tmean
@@ -85,7 +84,6 @@ class Moyer(BaseDisease):
     def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with daily data.
 
-        :param dt: datetime of the update
         :param update_ctx: update context with max temperature and rain
         """
         if not isclose(self._asc_p, 1):
@@ -190,7 +188,6 @@ class DavisRI(BaseDiseaseWithPhenology):
     def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with hourly data.
 
-        :param dt: datetime of the update
         :param update_ctx: update context with leaf wetness and temperature
         """
         self._leaf_wd.update(update_ctx.lw)
@@ -264,7 +261,6 @@ class Caffi(BaseDiseaseWithPhenology):
     def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with daily data.
 
-        :param dt: update datetime
         :param update_ctx: update context using t, rain, lw
         """
         if self._phen_model.current_stage >= Caffi.START_BBCH:

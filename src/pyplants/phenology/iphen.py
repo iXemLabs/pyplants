@@ -1,7 +1,6 @@
 import csv
 
 from bisect import bisect_left
-from datetime import datetime
 from importlib.resources import read_text
 
 from pyplants.utils import UpdateCtx
@@ -41,11 +40,10 @@ class Iphen(BasePhenology):
         """
         self._nhh.set_params(*nhh_params)
 
-    def update(self, dt: datetime, update_ctx: UpdateCtx):
+    def update(self, update_ctx: UpdateCtx):
         """Update the model using the mean hourly temperature.
 
-        :param dt: the datetime of the provided sample
-        :param update_ctx: update context holding mean temperature
+        :param update_ctx: the update context object
         """
         self._nhh.update(update_ctx.t)
         # Computed next BBCH values
@@ -79,7 +77,7 @@ class Iphen(BasePhenology):
         # Check if a new stage has been reached
         if (self._bbch.current_stage.vstage != bbch_v
                 or self._bbch.current_stage.rstage != bbch_r):
-            self._bbch.add_stage(dt, v=bbch_v, r=bbch_r)
+            self._bbch.add_stage(update_ctx.dt, v=bbch_v, r=bbch_r)
 
     @classmethod
     def build_from_plant(cls, plant, variety):

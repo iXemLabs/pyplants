@@ -33,7 +33,6 @@ class BaseDisease(ABC):
     def update(self, update_ctx: UpdateCtx):
         """Update the model using the specific model implementation.
 
-        :param dt: update datetime object
         :param update_ctx: update context with proper values
         """
         update_args = asdict(update_ctx)
@@ -50,7 +49,7 @@ class BaseDisease(ABC):
         pass
 
     @abstractmethod
-    def _update_imp(self, dt: datetime, update_ctx: UpdateCtx):
+    def _update_imp(self, update_ctx: UpdateCtx):
         pass
 
 
@@ -62,27 +61,19 @@ class BaseDiseaseWithPhenology(BaseDisease):
 
         :param phen_model: a phenology model to use
         :param bbch_period: bbch range in which the model should run
-        :param phen_auto_update: if model has to automatically update phenology
         """
         super().__init__()
         self._phen_model = phen_model
         self._bbch_period = bbch_period
-        self._phen_auto_update = False
 
     def update(self, update_ctx: UpdateCtx):
         """Update the model using the specific model implementation.
 
-        If phen_auto_update is set to True update als the phenology model.
-
         Before calling the specific update implementation check the current
         BBCH value to be in range (if provided), otherwise skip the execution.
 
-        :param dt: update datetime object
         :param update_ctx: update context with proper values
         """
-        if self._phen_auto_update:
-            self._phen_model.update(update_ctx)
-        # Check phenology to be in range (if provided)
         if self._bbch_period is not None:
             cstage = self._phen_model.current_stage
             if cstage < self._bbch_period[0] or cstage > self._bbch_period[1]:
@@ -157,7 +148,6 @@ class InfectionManager(object):
     def update(self, update_ctx: UpdateCtx):
         """Update all the running infections.
 
-        :param dt: datetime of the update context
         :param update_ctx: update context with proper values
         """
         for infection in self._infections:
