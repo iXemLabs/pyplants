@@ -10,9 +10,9 @@ from pyplants.phenology.base import BasePhenology
 
 
 class Iphen(BasePhenology):
-    """Iphen phenological model for grape, based on [1]_.
+    """Iphen phenological model for grape.
 
-    Internally use the NHH (Normal Hour Heat) [2]_.
+    Internally use the NHH (Normal Hour Heat).
     """
 
     def __init__(self, nhh_params, nhh_2_bbch_v, nhh_2_bbch_r):

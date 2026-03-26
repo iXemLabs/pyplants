@@ -32,5 +32,5 @@ html_sidebars = {
     ]
 }
 html_theme_options = {
-    "description": "A collection of disease and phenological models for agriculture"
+    "description": " A collection of phenological and disease models for plants."
 }

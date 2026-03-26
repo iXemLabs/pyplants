@@ -6,42 +6,41 @@
 PyPlants
 ========
 
-PyPlants is a collection of phenological and disease models for plants. Models in this package can be found in the scientific literature and are implemented in pure python.
+PyPlants is a collection of phenological and disease models for plants. The main purpose of this library is to enable both developers and researchers to use models described in the scientific literature.
 
-Example
--------
+PyPlants is designed with ease in mind, all the models implement a common software interface hiding the implementation details. Additionally, basic support to develop custom models is provided.
 
-This is an example of how to initialize a simple disease model for *powdery mildew*, and how to run it with some example data.
+Getting Started
+---------------
+
+In this example we initialize a simple disease model for *powdery mildew* (pm), and we run it using the :code:`update` method.
 
 .. code-block:: python
+
+   from datetime import datetime
 
    from pyplants.utils import UpdateCtx
    from pyplants.diseases.pm import Moyer
 
    model = Moyer()
    # Update the model with input data...
-   model.update(dt, UpdateCtx(tmax=10, rain=0))
-   # ...
+   model.update(
+      UpdateCtx(dt=datetime(2026, 1, 1, 0, 0), tmax=5, rain=0))
+   # You call update when a new update context is available
+   # The output of the model is stored inside the events property
    model.events
 
-UpdateCtx is an utility class that contains the agrometeorological data. In general, once initialized, each model expose a common :code:`update` method that accept a :code:`datetime` object and the update context.
+UpdateCtx is an utility that contains the agrometeorological data. Users should fill the update context with new data and then invoke the :code:`update` method. The time step depends on the specific model, in this case, *Moyer* runs on a daily basis.
 
-Each model expose an events list containing the output computed to each update.
+Finally, each model exposes an events list containing the output computed during each update.
 
 .. topic:: Note
 
    For insight regarding each specific model, original papers are quoted in the documentation.
 
 .. toctree::
-   usage
    diseases
    phenology
+   contribute
    :hidden:
    :maxdepth: 2
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
