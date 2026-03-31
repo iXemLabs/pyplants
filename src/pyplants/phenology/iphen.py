@@ -3,10 +3,10 @@ import csv
 from bisect import bisect_left
 from importlib.resources import read_text
 
-from pyplants.utils import UpdateCtx
 from pyplants.utils.nhh import NHH, get_nhh_params
 from pyplants.utils.plants import PlantEnum
-from pyplants.phenology.base import BasePhenology
+from pyplants.core.base import BasePhenology
+from pyplants.core.context import UpdateCtx
 
 
 class Iphen(BasePhenology):
@@ -40,12 +40,12 @@ class Iphen(BasePhenology):
         """
         self._nhh.set_params(*nhh_params)
 
-    def update(self, update_ctx: UpdateCtx):
+    def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model using the mean hourly temperature.
 
         :param update_ctx: the update context object
         """
-        self._nhh.update(update_ctx.t)
+        self._nhh.update(update_ctx.tmean)
         # Computed next BBCH values
         bbch_v = 0
         bbch_r = 0

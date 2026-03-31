@@ -76,7 +76,7 @@ class BBCHScale(object):
         return len(self._scale) == 0
 
     @property
-    def current_stage(self):
+    def current_stage(self) -> BBCHStage:
         """The current BBCH stage (0 not started)."""
         if len(self._scale) == 0:
             return BBCHStage(0, 0, None)

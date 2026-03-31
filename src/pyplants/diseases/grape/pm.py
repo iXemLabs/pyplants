@@ -8,16 +8,16 @@ from typing import List
 from bisect import bisect_right
 from importlib.resources import read_text
 
-from pyplants.utils import UpdateCtx
-from pyplants.utils import LeafWetnessCounter
-from pyplants.diseases.base import BaseDisease
-from pyplants.diseases.base import BaseDiseaseWithPhenology
-from pyplants.diseases.base import DiseaseEvent
-from pyplants.diseases.base import InfectionManager
+from pyplants.core.base import BaseDisease
+from pyplants.core.base import BaseDiseaseWithPhenology
+from pyplants.core.context import UpdateCtx
+from pyplants.utils.helpers import LeafWetnessCounter
+from pyplants.diseases.common import DiseaseEvent
+from pyplants.diseases.common import InfectionManager
 
 
 class Gadoury(BaseDiseaseWithPhenology):
-    """Gadoury PM model [1]_.
+    """Gadoury PM model.
 
     Use daily temperature and rain data to compute:
 
@@ -55,20 +55,20 @@ class Gadoury(BaseDiseaseWithPhenology):
         ))
 
     @property
-    def update_ctx_fields(self) -> Set[str]:
+    def req_update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
         return {"tmean", "rain"}
 
 
 class Moyer(BaseDisease):
-    """Moyer ascospore release model [2]_.
+    """Moyer ascospore release model.
 
     Use daily max temperature and cumulative rain to compute:
 
     - ascospore release event (boolean)
 
     The ascospore discharge period is an internal parameter used to compute the
-    time period for which the model has to run. It stops when 100% is reached.
+    time period in which the model has to run. It stops when 100% is reached.
     """
 
     def __init__(self):
@@ -108,7 +108,7 @@ class Moyer(BaseDisease):
             ))
 
     @property
-    def update_ctx_fields(self) -> Set[str]:
+    def req_update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
         return {"tmax", "rain"}
 
@@ -160,14 +160,14 @@ class _MillsPM(object):
 
 
 class DavisRI(BaseDiseaseWithPhenology):
-    """Davis Risk Index model [3]_.
+    """Davis Risk Index model.
 
     Use hourly temperature and leaf wetness to compute:
 
     - ascospore relese event
 
-    This model use a modified Mills table [4]_ to compute the risk level
-    expressed as no risk, low, medium, high (0, 1, 2, 3).
+    This model uses a modified Mills table to compute the risk level
+    expressed as: no risk, low, medium, high (0, 1, 2, 3).
     """
     START_BBCH = 9
     END_BBCH = 75
@@ -211,13 +211,13 @@ class DavisRI(BaseDiseaseWithPhenology):
         ))
 
     @property
-    def update_ctx_fields(self) -> Set[str]:
+    def req_update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
         return {"tmean", "lw"}
 
 
 class Caffi(BaseDiseaseWithPhenology):
-    """Caffi mechanistic model [5]_.
+    """Caffi mechanistic model.
 
     Use daily temperature, rain, relative humidity and leaf wetness.
 
@@ -312,7 +312,7 @@ class Caffi(BaseDiseaseWithPhenology):
                 self._inf_mng.update(update_ctx)
 
     @property
-    def update_ctx_fields(self) -> Set[str]:
+    def req_update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
         return {"tmean", "rhmean", "rain", "lw"}
 

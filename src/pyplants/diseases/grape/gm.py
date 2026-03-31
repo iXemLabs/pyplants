@@ -1,10 +1,10 @@
 from math import exp
 from typing import Set
 
-from pyplants.utils import UpdateCtx
-from pyplants.utils import LeafWetnessCounter
-from pyplants.utils import DiseaseEvent
-from pyplants.diseases.base import BaseDiseaseWithPhenology
+from pyplants.core.base import BaseDiseaseWithPhenology
+from pyplants.core.context import UpdateCtx
+from pyplants.utils.helpers import LeafWetnessCounter
+from pyplants.diseases.common import DiseaseEvent
 
 
 class Broome(BaseDiseaseWithPhenology):
@@ -14,8 +14,8 @@ class Broome(BaseDiseaseWithPhenology):
 
     * infection risk
 
-    This module compute risk for continuous leaf wetness period computed using
-    a dry_off equals to 4h.
+    This module compute infection risk during continuous leaf wetness periods
+    counted using a dry_off equals to 4h.
     """
     START_BBCH = 65
     END_BBCH = 89
@@ -38,7 +38,7 @@ class Broome(BaseDiseaseWithPhenology):
         self._leaf_wd.update(update_ctx.lw)
         # Check to be in a leaf wetness period
         if self._leaf_wd.value > 0:
-            t = update_ctx.t
+            t = update_ctx.tmean
             w = self._leaf_wd.value
             # Compute the Broome Index
             index = -2.647866 - (0.374927 * w) + (0.061601 * w * t) \
@@ -47,6 +47,7 @@ class Broome(BaseDiseaseWithPhenology):
             inf = index / (1 + index)
         self._events.append(DiseaseEvent(dt=update_ctx.dt, infection=inf))
 
-    def update_ctx_fields(self) -> Set[str]:
+    @property
+    def req_update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
         return {"t", "lw"}
