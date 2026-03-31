@@ -1,76 +1,31 @@
 Diseases
 ========
 
-This package is composed by different modules, one for each disease. The currently supported diseases are listed below:
+Each model is implemented as a python class that inherit from one of the possible base classes in :code:`pyplants.core.base`. To run the model users should invoke the :code:`update` method passing a valid :class:`UpdateCtx <pyplants.core.context.UpdateCtx>` object. It is worth to say that internal :code:`_update_imp` should never be invoked in the client code.
 
-- PM: Powdery Mildew
+Each model automatically check the presence of the input fields inside the update context, if a required field is set to :code:`None` an exception rises. Results are stored inside the :code:`events` property, a list containing an entry for each time the method :code:`update` has been invoked.
 
-Each model is implemented as a python class that inherit from one of the possible base classes in :code:`pyplants.diseases.base`. To run the model users should invoke the :code:`update` method passing a valid :code:`pyplants.utils.UpdateCtx` object. It is worth to say that internal :code:`_update_imp` should never be invoked in the client code.
+Disease models are separated in sub-modules, one for each crop. A further division is made by disease, where models belonging to the same disease are grouped together. This is the list of the currently supported crops:
 
-Each model automatically check the presence of the input variables inside the update context, if a required field is missing an exception is rised. Results are stored inside the :code:`events` property, a list that contains an entry for each time the method :code:`update` is invoked.
+.. toctree::
+   :maxdepth: 1
 
-Powdery Mildew
---------------
+   diseases/grape
 
-The :code:`pyplants.diseases.pm` module currently includes four different models to predict ascospore release events and infection events. The following table is a summary of the implemented models and the main features.
-
-================  ========  =================  =========
-Model             Timestep  Ascospore Release  Infection
-================  ========  =================  =========
-Gadoury [1]_      Daily     Yes                Yes
-Moyer [2]_        Daily     Yes                No
-Davis [3]_        Hourly    Yes                No
-Caffi [5]_        Daily     Yes                Yes
-================  ========  =================  =========
-
-Following the details regarding each model.
-
-.. autoclass:: pyplants.diseases.pm.Gadoury
-	:show-inheritance:
-	:members:
-	:member-order: bysource
-
-.. autoclass:: pyplants.diseases.pm.Moyer
-	:show-inheritance:
-	:members:
-	:member-order: bysource
-
-.. autoclass:: pyplants.diseases.pm.DavisRI
-	:show-inheritance:
-	:members:
-	:member-order: bysource
-
-.. autoclass:: pyplants.diseases.pm.Caffi
-	:show-inheritance:
-	:members:
-	:member-order: bysource
-
-
-Base Classes
+Model output
 ------------
 
-Each model should hinerit from one of these base classes. When no phenology hints is required the :code:`BaseDisease` class should be used, on the countrary :code:`BaseDiseaseWithPhenology`. This is relevant only if you wish to develop your own model compatible with this package.
+Disease models create a list of :code:`DiseaseEvent` objects. A disease event include a reference date, a :code:`spore_release` index and an :code:`infection` index, both expressed as float, even if a model compute boolean results. Additional fields are supported using a simple python dictionary (:code:`extra_fields`).
 
-.. autoclass:: pyplants.diseases.base.BaseDisease
-	:members:
-	:member-order: bysource
-	:private-members:
-
-.. autoclass:: pyplants.diseases.base.BaseDiseaseWithPhenology
-	:members:
-	:member-order: bysource
-	:private-members:
-
-The :code:`pyplants.diseases.base.DiseaseEvent` class include the output computed to each update.
-
-.. autoclass:: pyplants.diseases.base.DiseaseEvent
+.. autoclass:: pyplants.diseases.common.DiseaseEvent
 	:members:
 	:member-order: bysource
 
-.. rubric:: References
+Infection Manager
+-----------------
 
-.. [1] Gadoury, D. M., & Pearson, R. C. (1990). Ascocarp dehiscence and ascospore discharge in Uncinula necator. Phytopathology, 80(4), 393-401
-.. [2] Moyer, M. M., Gadoury, D. M., Wilcox, W. F., & Seem, R. C. (2014). Release of Erysiphe necator ascospores and impact of early season disease pressure on Vitis vinifera fruit infection. American Journal of Enology and Viticulture, 65(3), 315-324
-.. [3] Gubler, W. D., Rademacher, M. R., Vasquez, S. J., & Thomas, C. S. (1999). Control of powdery mildew using the UC Davis powdery mildew risk index. APSnet Feature
-.. [4] Mills, W. D. (1944). Efficient use of sulfur dust and sprays during rain to control apple scab. NY State Agr. Expt. Sta., Ithaca. Ext. Bul, 630.
-.. [5] Caffi, T., Rossi, V., Legler, S. E., & Bugiani, R. (2011). A mechanistic model simulating ascosporic infections by Erysiphe necator, the powdery mildew fungus of grapevine. Plant Pathology, 60(3), 522-531
+Some models are capable to keep track of primary infection evolution, for this purpose the :code:`InfectionManager` can be used.
+
+.. autoclass:: pyplants.diseases.common.InfectionManager
+	:members:
+	:member-order: bysource

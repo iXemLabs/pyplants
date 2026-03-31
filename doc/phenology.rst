@@ -1,27 +1,27 @@
 Phenology
 =========
 
-Phenological models are used to predict growth stage of the crop. In literature many models exists, but for  the moment, in this package, only one is implemented.
+Phenological models are used to predict growth stage of the crop. There are many models in the literature, but for  the moment, in this package, only one is implemented.
 
 In general, every phenology model in pyplants will use the BBCH scale as a common way to keep track of phenology growth stages [1]_. BBCH is composed by two scales that must always be reported:
 
 - Vegetative
 - Reproductive
 
-The vegetative and reproductive scales may occasionally overlap, for this reason phenology results are stored separately for both the scale.
+The vegetative and reproductive scales may occasionally overlap, for this reason they are separately stored.
 
 BBCH Scale
 ----------
 
-In general users should not use directly the *BBCH* utilities, phenological models should handle them automatically. But if you want to develop your own model this simple implementation can be useful.
+In general, users should not use directly the *BBCH* utilities. Phenological models must handle them automatically, however, if you want to develop your own model, this simple implementation can be useful.
 
-Moreover, some disease models depend on phenology data other then agrometeorological data, in this case, disease models accept in input a phenology model that expose result using the BBCH scale.
+Additionally, disease models sometimes require phenological data in addition to weather data, in this case, disease models require a phenology model as input argument to their constructor.
 
 .. autoclass:: pyplants.phenology.scales.BBCHStage
 	:members:
 	:member-order: bysource
 
-The :code:`BBCHStage` class also implements the overload for comparison operator. You can compare between :code:`BBCHStage` or using integer values. In this last case, integer values are interpreted as the highest value between vegetative and reproductive.
+The :code:`BBCHStage` class also implements the overload for comparison operator. You can compare between :code:`BBCHStage` or integer values. In this case, integer values are interpreted as the highest value between the vegetative and reproductive stage.
 
 .. autoclass:: pyplants.phenology.scales.BBCHScale
 	:members:
@@ -39,10 +39,6 @@ This implementation currently supports only grape plants.
 	:members:
 	:member-order: bysource
 	:class-doc-from: both
-
-.. autoclass:: pyplants.phenology.base.BasePhenology
-	:members:
-	:member-order: bysource
 
 .. rubric:: References
 
