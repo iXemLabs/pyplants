@@ -7,7 +7,7 @@ from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.grape.pm import Moyer
 from pyplants.phenology.scales import BBCHStage
 
-from utils import load_test_samples
+from .utils import load_test_samples
 
 
 class BaseTest(unittest.TestCase):
@@ -39,31 +39,29 @@ class BaseTest(unittest.TestCase):
         # Check the overload operator for comparison
         self.assertGreater(s2, s1)
         self.assertGreater(9, s2)
+        # Start reproductive scale
+        s3 = BBCHStage(vstage=12, rstage=53, dt=datetime(2026, 3, 1, 0, 0))
+        self.assertGreater(s3, s2)
+        # Increare vegetative scale
+        s4 = BBCHStage(vstage=15, rstage=53, dt=datetime(2026, 3, 20, 0, 0))
+        self.assertEqual(s4, s3)
 
     def test_daily_updater(self):
         """Basic test for the daily updater helper."""
         daily_updater = DailyUpdater([])
-        samples = load_test_samples("samples.csv")
+        samples = load_test_samples()
         # Update using the first day of the dataset
         for i in range(0, 24):
-            daily_updater.update(UpdateCtx(
-                dt=samples[i]["DATE"],
-                rain=samples[i]["RAIN"],
-                tmean=samples[i]["TMEAN"],
-                rhmean=samples[i]["RHMEAN"],
-                lw=samples[i]["LEAFWETNESS"]))
+            daily_updater.update(samples[i])
+        # Check daily computation
         self.assertEqual(daily_updater._daily_ctx.tmax, 8.42)
         self.assertEqual(daily_updater._daily_ctx.tmin, 5.87)
         self.assertEqual(daily_updater._daily_ctx.lw, 13)
         self.assertEqual(daily_updater._daily_ctx.rain, 0)
         # Update using data from the next day
         for i in range(24, 48):
-            daily_updater.update(UpdateCtx(
-                dt=samples[i]["DATE"],
-                rain=samples[i]["RAIN"],
-                tmean=samples[i]["TMEAN"],
-                rhmean=samples[i]["RHMEAN"],
-                lw=samples[i]["LEAFWETNESS"]))
+            daily_updater.update(samples[i])
+        # Check next daily computation
         self.assertEqual(daily_updater._daily_ctx.tmax, 8.43)
         self.assertEqual(daily_updater._daily_ctx.tmin, 7.45)
         self.assertEqual(daily_updater._daily_ctx.lw, 24)

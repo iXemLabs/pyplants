@@ -1,10 +1,7 @@
 import unittest
 
-from datetime import datetime
-
-from pyplants.utils import UpdateCtx
 from pyplants.utils.plants import PlantEnum
-from pyplants.diseases.pm import DavisRI
+from pyplants.diseases.grape.pm import DavisRI
 from pyplants.phenology.iphen import Iphen
 
 
