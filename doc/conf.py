@@ -32,5 +32,9 @@ html_sidebars = {
     ]
 }
 html_theme_options = {
-    "description": " A collection of phenological and disease models for plants."
+    "description": " A collection of disease and phenology models for plants.",
+    "fixed_sidebar": True,
+    "github_user": "iXemLabs",
+    "github_repo": "pyplants",
+    "github_button": True
 }

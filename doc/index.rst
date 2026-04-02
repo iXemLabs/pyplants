@@ -20,7 +20,7 @@ In this example we initialize a simple disease model for *powdery mildew* (pm), 
    from datetime import datetime
 
    from pyplants.core.context import UpdateCtx
-   from pyplants.diseases.pm import Moyer
+   from pyplants.diseases.grape.pm import Moyer
 
    model = Moyer()
    # Update the model with input data...
