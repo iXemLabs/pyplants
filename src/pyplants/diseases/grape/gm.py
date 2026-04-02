@@ -50,4 +50,4 @@ class Broome(BaseDiseaseWithPhenology):
     @property
     def req_update_ctx_fields(self) -> Set[str]:
         """Model required update context fields."""
-        return {"t", "lw"}
+        return {"tmean", "lw"}
