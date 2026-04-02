@@ -24,7 +24,7 @@ class BBCHStage:
 
     def __eq__(self, other):
         if isinstance(other, BBCHStage):
-            return self.vstage == other.vstage and self.rstage == other.rstage
+            return self.stage == other.stage
         if isinstance(other, int):
             return self.stage == other
         raise TypeError("== supported only with int and BBCHStage")
