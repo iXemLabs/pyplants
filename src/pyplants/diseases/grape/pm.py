@@ -251,7 +251,7 @@ class Caffi(BaseDiseaseWithPhenology):
         self._dd = 0
         # Overwintered chasmothecia
         self._och = och
-        self._inf_mng = InfectionManager(self._InfectionLatencyUpdater())
+        self._inf_mng = InfectionManager(self.__compute_inf_latency)
 
     @property
     def infections(self) -> List[Dict]:
@@ -263,7 +263,7 @@ class Caffi(BaseDiseaseWithPhenology):
 
         :param update_ctx: update context using t, rain, lw
         """
-        if self._phen_model.current_stage >= Caffi.START_BBCH:
+        if self._phen_model.scale.current_stage >= Caffi.START_BBCH:
             t = update_ctx.tmean
             r = update_ctx.rain
             lwd = update_ctx.lw
@@ -316,14 +316,12 @@ class Caffi(BaseDiseaseWithPhenology):
         """Model required update context fields."""
         return {"tmean", "rhmean", "rain", "lw"}
 
-    class _InfectionLatencyUpdater(object):
-        """Infection latency update strategy for caffi."""
+    @staticmethod
+    def __compute_inf_latency(update_ctx: UpdateCtx) -> float:
+        """Infection latency update strategy for Caffi.
 
-        def __call__(self, update_ctx: UpdateCtx) -> float:
-            """The daily latency based on temperature.
-
-            :param update_ctx: the current update context
-            :returns: the daily increase for latency computation
-            """
-            t = update_ctx.t
-            return 1 / (47.256 - (3.604 * t) + (0.077 * (t ** 2)))
+        :param update_ctx: the current update context
+        :returns: the daily increase for latency computation
+        """
+        tmean = update_ctx.tmean
+        return 1 / (47.256 - (3.604 * tmean) + (0.077 * (tmean ** 2)))
