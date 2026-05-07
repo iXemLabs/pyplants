@@ -7,6 +7,7 @@ from pyplants.utils.nhh import NHH, get_nhh_params
 from pyplants.utils.plants import PlantEnum
 from pyplants.core.base import BasePhenology
 from pyplants.core.context import UpdateCtx
+from pyplants.phenology.scales import BBCHStageAlreadyReached
 
 
 class Iphen(BasePhenology):
@@ -46,38 +47,42 @@ class Iphen(BasePhenology):
         :param update_ctx: the update context object
         """
         self._nhh.update(update_ctx.tmean)
-        # Computed next BBCH values
-        bbch_v = 0
-        bbch_r = 0
-        # Current BBCH values
-        cur_vstage = self._bbch.current_stage.vstage
-        cur_rstage = self._bbch.current_stage.rstage
-        # Check the vegetative scale not to be over
-        max_bbch_v = self.__table_v["bbch"][-1]
-        if cur_vstage < max_bbch_v:
-            # Search inside the table current nhh
+        skip = False
+        # Process the vegetative scale
+        if len(self._bbch.vscale) > 0:
+            cur_vstage = self._bbch.vscale[-1]
+            max_bbch_v = self.__table_v["bbch"][-1]
+            # Check the vegetative scale not to be over
+            if cur_vstage.stage == max_bbch_v:
+                skip = True
+        # We search inside the table only if needed
+        if not skip:
             pos = bisect_left(self.__table_v["nhh"], self._nhh.value)
             if pos > 0:
-                bbch_v = self.__table_v["bbch"][pos - 1]
-        else:
-            # If no more vegetative stage stay on the last
-            bbch_v = cur_vstage
-        # Check the reproductive scale to be started
+                code = self.__table_v["bbch"][pos - 1]
+                try:
+                    self._bbch.add_stage(update_ctx.dt, code)
+                except BBCHStageAlreadyReached:
+                    pass
+        skip = False
+        # Process the reproductive scale
+        # If the scale is not started or over we can skip...
         if self._nhh.value >= self.__table_r["nhh"][0]:
-            # And not to be over
-            max_bbch_r = self.__table_r["bbch"][-1]
-            if cur_rstage < max_bbch_r:
-                bbch_r = self.__table_r["bbch"][0]
-                # Search inside the table current nhh
-                pos = bisect_left(self.__table_r["nhh"], self._nhh.value)
-                if pos > 0:
-                    bbch_r = self.__table_r["bbch"][pos - 1]
-            else:
-                bbch_r = cur_rstage
-        # Check if a new stage has been reached
-        if (self._bbch.current_stage.vstage != bbch_v
-                or self._bbch.current_stage.rstage != bbch_r):
-            self._bbch.add_stage(update_ctx.dt, v=bbch_v, r=bbch_r)
+            if len(self._bbch.rscale) > 0:
+                cur_rstage = self._bbch.rscale[-1]
+                max_bbch_r = self.__table_r["bbch"][-1]
+                if cur_rstage.stage == max_bbch_r:
+                    skip = True
+        else:
+            skip = True
+        if not skip:
+            pos = bisect_left(self.__table_r["nhh"], self._nhh.value)
+            if pos > 0:
+                code = self.__table_r["bbch"][pos - 1]
+                try:
+                    self._bbch.add_stage(update_ctx.dt, code)
+                except BBCHStageAlreadyReached:
+                    pass
 
     @classmethod
     def build_from_plant(cls, plant, variety):
@@ -126,7 +131,7 @@ def __load_data(fname):
     # Add samples for each row
     for row in reader:
         for f in reader.fieldnames:
-            table[f].append(row[f])
+            table[f].append(int(row[f]))
     return table
 
 

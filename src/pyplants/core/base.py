@@ -121,7 +121,8 @@ class BaseDiseaseWithPhenology(BaseDisease):
         :param update_ctx: update context with proper values
         """
         if self._bbch_period is not None:
-            cstage = self._phen_model.scale.current_stage
-            if cstage < self._bbch_period[0] or cstage > self._bbch_period[1]:
+            if not self._phen_model.scale.has_started(self._bbch_period[0]):
+                return
+            if self._phen_model.scale.has_ended(self._bbch_period[1]):
                 return
         super().update(update_ctx)

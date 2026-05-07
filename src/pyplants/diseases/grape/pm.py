@@ -263,7 +263,7 @@ class Caffi(BaseDiseaseWithPhenology):
 
         :param update_ctx: update context using t, rain, lw
         """
-        if self._phen_model.scale.current_stage >= Caffi.START_BBCH:
+        if self._phen_model.scale.has_started(Caffi.START_BBCH):
             t = update_ctx.tmean
             r = update_ctx.rain
             lwd = update_ctx.lw

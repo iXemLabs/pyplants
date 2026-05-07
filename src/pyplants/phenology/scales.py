@@ -2,147 +2,162 @@ from datetime import datetime
 from dataclasses import dataclass
 
 
-@dataclass
-class BBCHStage:
-    """A single BBCH stage.
+class BBCHStage(object):
+    """A simple BBCH stage."""
+    _VEG = "v"
+    _REP = "r"
+    _THRESHOLD = 49
 
-    Store separately vegetative and reproductive stage since they can overlap.
-    """
-    vstage: int
-    rstage: int
-    dt: datetime
+    def __init__(self, code: int):
+        """Init the stage.
+
+        :raises ValueError: when an invalid BBCH code is provided
+        """
+        if code <= 0 or code >= 99:
+            raise ValueError("BBCH stage code must be between 00 and 99")
+        self._code = code
 
     @property
-    def stage(self):
-        """Get the stage as an integer.
+    def code(self) -> int:
+        """The entire BBCH code."""
+        return self._code
 
-        :returns: the higher value between vegetative and reproductive
+    @property
+    def main_phase(self) -> str:
+        """Main phase (vegetative or reproductive)."""
+        if self._code < BBCHStage._THRESHOLD:
+            return BBCHStage._VEG
+        return BBCHStage._REP
+
+    def is_vegetative(self):
+        """Check if the BBCH stage is vegetative scale or not.
+
+        :returns: True if the code is less then `code:_THRESHOLD`
         """
-        _vstage = 0 if self.vstage is None else self.vstage
-        _rstage = 0 if self.rstage is None else self.rstage
-        return max(_vstage, _rstage)
+        return self._code < BBCHStage._THRESHOLD
 
     def __eq__(self, other):
         if isinstance(other, BBCHStage):
-            return self.stage == other.stage
+            return self.code == other.code
         if isinstance(other, int):
-            return self.stage == other
-        raise TypeError("== supported only with int and BBCHStage")
+            return self.code == other
+        raise TypeError("equality supports only int and BBCHStage")
+
+    def __ne__(self, other):
+        if isinstance(other, BBCHStage):
+            return self.code != other.code
+        if isinstance(other, int):
+            return self.code != other
+        raise TypeError("inequality supports only int and BBCHStage")
 
     def __lt__(self, other):
-        if isinstance(other, BBCHStage):
-            return self.stage < other.stage
-        if isinstance(other, int):
-            return self.stage < other
-        raise TypeError("< supported only with int and BBCHStage")
+        other_stage = self.__before_compare_op(other)
+        return self.code < other_stage.code
 
     def __le__(self, other):
-        if isinstance(other, BBCHStage):
-            return self.stage <= other.stage
-        if isinstance(other, int):
-            return self.stage <= other
-        raise TypeError("<= supported only with int and BBCHStage")
+        other_stage = self.__before_compare_op(other)
+        return self.code <= other_stage.code
 
     def __gt__(self, other):
-        if isinstance(other, BBCHStage):
-            return self.stage > other.stage
-        if isinstance(other, int):
-            return self.stage > other
-        raise TypeError("> supported only with int and BBCHStage")
+        other_stage = self.__before_compare_op(other)
+        return self.code > other_stage.code
 
     def __ge__(self, other):
+        other_stage = self.__before_compare_op(other)
+        return self.code >= other_stage.code
+
+    def __before_compare_op(self, other):
+        other_stage = None
         if isinstance(other, BBCHStage):
-            return self.stage >= other.stage
+            other_stage = other
         if isinstance(other, int):
-            return self.stage >= other
-        raise TypeError(">= supported only with int and BBCHStage")
+            other_stage = BBCHStage(other)
+        if other_stage is None:
+            raise TypeError("Can compare only with int and BBCHStage")
+        if self.main_phase != other_stage.main_phase:
+            raise ValueError("Can not compare on different scales")
+        return other_stage
+
+
+@dataclass
+class BBCHRecord:
+    """A single phenology record."""
+    stage: BBCHStage
+    dt: datetime
+
+    def __str__(self):
+        return "%02d on %s" % (self.stage.code, self.dt.strftime("%c"))
+
+
+class BBCHStageAlreadyReached(Exception):
+    """Raise when try to append an already reached BBCH stage."""
+    pass
 
 
 class BBCHScale(object):
-    """BBCH scale used to track phenology stages.
+    """BBCH scale used to track phenology.
 
-    This scale is simply implemented as a list of :class:`.BBCHStage`.
+    A simple implementation composed by two lists of :class:`BBCHRecord`,
+    one for the vegetative and one for the reproductive scale.
     """
 
     def __init__(self):
-        """Initialize an empty bbch scale."""
-        self._scale = []
-
-    def _is_empty(self):
-        """Check if scale is empty.
-
-        :returns: True if empty False otherwise
-        """
-        return len(self._scale) == 0
+        """Initialize the vegetative and reproductive scale."""
+        self._vscale = []
+        self._rscale = []
 
     @property
-    def current_stage(self) -> BBCHStage:
-        """The current BBCH stage (0 not started)."""
-        if len(self._scale) == 0:
-            return BBCHStage(0, 0, None)
-        return self._scale[-1]
+    def vscale(self):
+        """The vegetative scale."""
+        return self._vscale
 
-    def add_stage(self, dt, v=None, r=None):
-        """Add a new stage to the bbch scale.
+    @property
+    def rscale(self):
+        """The reproductive scale."""
+        return self._rscale
 
-        When reproductive stage is not yet reached it can be left empty.
-        If reproductive stage was already reached, leaving it empty would rise
-        a ValueError.
-        The vegetative stage could be left empty only after reaching stage 9.
+    def add_stage(self, dt: datetime, code: int):
+        """Add a new phenology stage to the proper scale.
 
-        :param dt: datetime object when stage is reached
-        :param v: bbch vegetiva stage reached
-        :param r: bbch reproductive stage reached
+        :param dt: datetime of the new stage
+        :param code: the code of the new stage
         """
-        if len(self._scale) > 0:
-            pstage = self._scale[-1]
-            prev_v = pstage.vstage
-            prev_r = pstage.rstage
-            prev_t = pstage.dt
-        else:
-            prev_v = 0
-            prev_r = None
-            prev_t = None
-        # Empy vegetative value is acceptable only if we already reached the 9.
-        # Furhter value on this scale could be considered optionals.
-        if v is None and prev_v < 9:
-            raise ValueError("Missing value on vegetative scale")
-        # After reproductive stage has strted r value can not be empty
-        if r is None and prev_r is not None:
-            raise ValueError("Missing mandatory value on reproductive scale")
-        # Check the sequence of time to be respected
-        if prev_t is not None and dt <= prev_t:
-            raise ValueError("Invalid date provided")
-        # Check the sequence of vegetative and reproductive to be ok
-        if v is not None and v < prev_v:
-            raise ValueError("Vegetative scale can not decrese")
-        if r is not None and prev_r is not None and r < prev_r:
-            raise ValueError("Reproductive scale can not decrese")
-        # Finally we can add a new entry to the scale
-        self._scale.append(BBCHStage(v, r, dt))
+        stage = BBCHStage(code)
+        # Select the proper scale
+        scale = self._vscale if stage.is_vegetative() else self._rscale
+        # Check progression rule (date and code)
+        if len(scale) > 0:
+            if scale[-1].dt >= dt:
+                raise ValueError("Invalid temporal progression!")
+            if scale[-1].stage >= stage:
+                raise BBCHStageAlreadyReached
+        # Progression require new stage to be appended
+        scale.append(BBCHRecord(stage, dt))
 
-    def __iter__(self):
-        """Make the BBCH scale iterable.
+    def has_started(self, code: int) -> bool:
+        """Check if a given stage (code) has been reached.
 
-        :returns: an iterator to iterate over the scale
+        :param code: the code stage
+        :returns: True if last code in the scale is less than equals code
         """
-        return iter(self._scale)
+        stage = BBCHStage(code)
+        # Select the proper scale
+        scale = self._vscale if stage.is_vegetative() else self._rscale
+        # Check the scale not to be empty and then compare
+        if len(scale) > 0:
+            return scale[-1].stage >= stage
+        return False
 
-    def __repr__(self):
-        """Friendly print the scale on repl."""
-        n = len(self._scale)
-        # Nothing to show with empty scale
-        if n == 0:
-            return "Empty scale [ ]"
-        # Convert vegetative in string
-        if self._scale[-1].vstage is None:
-            v = "-"
-        else:
-            v = str(self._scale[-1].vstage)
-        # Convert reproductive in string
-        if self._scale[-1].rstage is None:
-            r = "-"
-        else:
-            r = str(self._scale[-1].rstage)
-        return "BBCH Scale [%d items]: Veg: %s; Rep: %s (last update: %s)" % (
-            n, v, r, self._scale[-1].dt.strftime("%c"))
+    def has_ended(self, code: int) -> bool:
+        """Check if a given stage (code) has been passed.
+
+        :param code: the code stage
+        :returns: True if last code in the scale is greather than code
+        """
+        stage = BBCHStage(code)
+        # Select the proper scale
+        scale = self._vscale if stage.is_vegetative() else self._rscale
+        # Check the scale not to be empty and then compare
+        if len(scale) > 0:
+            return scale[-1].stage > stage
+        return False
