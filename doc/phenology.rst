@@ -21,11 +21,17 @@ Additionally, disease models sometimes require phenological data in addition to 
 	:members:
 	:member-order: bysource
 
-The :code:`BBCHStage` class also implements the overload for comparison operator. You can compare between :code:`BBCHStage` or integer values. In this case, integer values are interpreted as the highest value between the vegetative and reproductive stage.
+.. autoclass:: pyplants.phenology.scales.BBCHRecord
+	:members:
+	:member-order: bysource
+
+The :code:`BBCHStage` class also implements the overload for comparison operator. You can compare between :code:`BBCHStage` or integer values. Comparison is allowed only between stages falling in the same main phase (vegetative or reproductive).
 
 .. autoclass:: pyplants.phenology.scales.BBCHScale
 	:members:
 	:member-order: bysource
+
+.. autoclass:: pyplants.phenology.scales.BBCHStageAlreadyReached
 
 Iphen
 -----

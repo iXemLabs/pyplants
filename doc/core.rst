@@ -29,9 +29,9 @@ Of course you need a properly set python build environment.
 Models architecture
 -------------------
 
-In pyplants two possible base models exists: :class:`BaseDisease <pyplants.core.base.BaseDisease>` for disease models and :class:`BasePhenology <pyplants.core.base.BasePhenology>` for phenology model. In general, a model is designed as simple python class that inherit by one of the available base classes.
+In pyplants two possible base models exists: :class:`BaseDisease <pyplants.core.base.BaseDisease>` for disease models and :class:`BasePhenology <pyplants.core.base.BasePhenology>` for phenology model. In general, a model is designed as simple python class that inherit by one of the available base classes. Regardless the type, concrete model must provide a proper implementation for the :code:`_update_imp` method.
 
-A phenology model must implements the abstract update :code:`_update_imp`. As soon as a new BBCH stage is reached, the internal :class:`BBCHScale <pyplants.phenology.scales.BBCHScale>` must be updated.
+For the phenology models, as soon as a new BBCH stage is reached, the internal :class:`BBCHScale <pyplants.phenology.scales.BBCHScale>` must be updated.
 
 A disease model, instead, must implements two abstract methods:
 
@@ -40,7 +40,7 @@ A disease model, instead, must implements two abstract methods:
 
 PyPlants will automatically check the update context for the mandatory fields, a :code:`ValueError` is raised if one of the requested field inside the context is set to :code:`None`.
 
-Additionally, when a disease model requires phenology data, it must inherit by :class:`BaseDiseaseWithPhenology <pyplants.core.base.BaseDiseaseWithPhenology>`. In this case, the parent constructor can be used to pass down a phenology model and an optional python tuple with the BBCH period. If provided, the model will be automatically executed only between the BBCH period.
+Additionally, when a disease model requires phenology data, it must inherit by :class:`BaseDiseaseWithPhenology <pyplants.core.base.BaseDiseaseWithPhenology>`. In this case, the parent constructor can be used to pass down a phenology model and an optional python tuple with the BBCH period. If provided, the model will be automatically executed only when the current BBCH stage falls in the provided range.
 
 Your first custom model
 ^^^^^^^^^^^^^^^^^^^^^^^
