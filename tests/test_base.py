@@ -34,17 +34,22 @@ class BaseTest(unittest.TestCase):
 
     def test_bbch(self):
         """BBCH comparison overload."""
-        s1 = BBCHStage(vstage=1, rstage=0, dt=datetime(2026, 1, 15, 0, 0))
-        s2 = BBCHStage(vstage=5, rstage=0, dt=datetime(2026, 1, 30, 0, 0))
+        s1 = BBCHStage(1)
+        s2 = BBCHStage(5)
         # Check the overload operator for comparison
         self.assertGreater(s2, s1)
         self.assertGreater(9, s2)
-        # Start reproductive scale
-        s3 = BBCHStage(vstage=12, rstage=53, dt=datetime(2026, 3, 1, 0, 0))
-        self.assertGreater(s3, s2)
-        # Increare vegetative scale
-        s4 = BBCHStage(vstage=15, rstage=53, dt=datetime(2026, 3, 20, 0, 0))
-        self.assertEqual(s4, s3)
+        # Check with reproductive scale
+        s3 = BBCHStage(53)
+        self.assertEqual(s3, 53)
+        # Check compare on different scales (rep and veg)
+        with self.assertRaises(ValueError):
+            _ = s3 > s2
+        # Check unsupported data type
+        with self.assertRaises(TypeError):
+            _ = s3 >= "53"
+        s4 = BBCHStage(90)
+        self.assertGreater(s4, s3)
 
     def test_daily_updater(self):
         """Basic test for the daily updater helper."""
