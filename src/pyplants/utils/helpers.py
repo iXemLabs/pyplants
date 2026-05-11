@@ -131,7 +131,7 @@ class DailyUpdater(object):
 
         :param dt: the new datetime for the context
         """
-        self._daily_ctx = UpdateCtx(dt=dt)
+        self._daily_ctx = UpdateCtx(dt=dt, step="d")
         self._nsamples = 0
 
     def __update_field(self, prev_value, value, strategy="mean"):

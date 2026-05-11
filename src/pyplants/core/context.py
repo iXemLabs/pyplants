@@ -1,14 +1,28 @@
+from enum import auto
+from enum import Enum
 from datetime import datetime
 from dataclasses import dataclass
 
 from pyplants.utils import vpd_h
 
 
+class CtxField(Enum):
+    """Enum representing a possible field inside the update context."""
+    LW = auto()
+    TMAX = auto()
+    TMIN = auto()
+    TMEAN = auto()
+    RHMAX = auto()
+    RHMIN = auto()
+    RHMEAN = auto()
+    RAIN = auto()
+
+
 @dataclass
 class UpdateCtx:
-    """Update context.
+    """The update context.
 
-    Contains data used by models to run the update.
+    A container for data used by models passed as input to the update method.
     """
     dt: datetime
     # Leaf wetness

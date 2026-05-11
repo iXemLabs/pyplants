@@ -7,6 +7,7 @@ from pyplants.utils.nhh import NHH, get_nhh_params
 from pyplants.utils.plants import PlantEnum
 from pyplants.core.base import BasePhenology
 from pyplants.core.context import UpdateCtx
+from pyplants.core.context import CtxField
 from pyplants.phenology.scales import BBCHStageAlreadyReached
 
 
@@ -15,6 +16,10 @@ class Iphen(BasePhenology):
 
     Internally use the NHH (Normal Hour Heat).
     """
+    _model_meta = {
+        "timestep": "h",
+        "use_ctx_fields": {CtxField.TMEAN}
+    }
 
     def __init__(self, nhh_params, nhh_2_bbch_v, nhh_2_bbch_r):
         """Initialize the model.
