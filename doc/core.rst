@@ -1,7 +1,7 @@
 Core
 ====
 
-If you want to contribute to the project, or you simply wants to use this library as base to build own models for your projects, in this page you will find the basic concept you must know.
+If you want to contribute to the project, or you simply wants to use this library as base to build your own models, in this page you will find the basic concept you must know.
 
 Installation
 ------------
@@ -29,18 +29,26 @@ Of course you need a properly set python build environment.
 Models architecture
 -------------------
 
-In pyplants two possible base models exists: :class:`BaseDisease <pyplants.core.base.BaseDisease>` for disease models and :class:`BasePhenology <pyplants.core.base.BasePhenology>` for phenology model. In general, a model is designed as simple python class that inherit by one of the available base classes. Regardless the type, concrete model must provide a proper implementation for the :code:`_update_imp` method.
+In pyplants two possible base models exists: :class:`BaseDisease <pyplants.core.base.BaseDisease>` for disease models and :class:`BasePhenology <pyplants.core.base.BasePhenology>` for phenology models. In general, a model is designed as a simple python class that inherit by one of the base classes. Regardless the type, concrete models must strictly follow the following schema:
 
-For the phenology models, as soon as a new BBCH stage is reached, the internal :class:`BBCHScale <pyplants.phenology.scales.BBCHScale>` must be updated.
+* provide a proper implementation for the :code:`_update_imp` method
+* define a class attribute :code:`_model_meta` as a standard dictionary
 
-A disease model, instead, must implements two abstract methods:
+In the following table, the possible :code:`_model_meta` fields are reported.
 
-* :code:`_update_imp`: to react on a new update context
-* :code:`req_update_ctx_fields`: returning a set of required fields inside the context
+============== ========================================================= =================================
+Field          Type                                                      Description
+============== ========================================================= =================================
+timestep       String                                                    Update timestep ('h' or 'd')
+use_ctx_fields Set of :class:`CtxField <pyplants.core.context.CtxField>` Required fields in context
+bbch_range     Tuple of integer                                          Valid BBCH range for model update
+============== ========================================================= =================================
 
-PyPlants will automatically check the update context for the mandatory fields, a :code:`ValueError` is raised if one of the requested field inside the context is set to :code:`None`.
+For phenology models, as soon as a new BBCH stage is reached, the internal :class:`BBCHScale <pyplants.phenology.scales.BBCHScale>` must be updated. Disease models, instead, must append a new :class:`DiseaseEvent <pyplants.diseases.common.DiseaseEvent>` to the events list each time the :code:`update` method is invoked.
 
-Additionally, when a disease model requires phenology data, it must inherit by :class:`BaseDiseaseWithPhenology <pyplants.core.base.BaseDiseaseWithPhenology>`. In this case, the parent constructor can be used to pass down a phenology model and an optional python tuple with the BBCH period. If provided, the model will be automatically executed only when the current BBCH stage falls in the provided range.
+If a disease model uses phenology data, :class:`BaseDiseaseWithPhenology <pyplants.core.base.BaseDiseaseWithPhenology>` has to be used as parent class, and a phenology model must be provided in the constructor. If a bbch_range is defined in the :code:`_model_meta`, the model will be automatically executed only when the current BBCH stage falls in the provided range.
+
+Finally, models automatically check the :code:`UpdateCtx` validity: a :code:`ValueError` is raised if one of the mandatory fields (listed inside :code:`use_ctx_fields`) is missing, or an invalid timestep is provided.
 
 Your first custom model
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -49,22 +57,19 @@ The rule of the three ten is a simple model to detect *downy mildew*. It is a da
 
 .. code-block:: python
 
-	from typing import Set
-
 	from pyplants.core.context import UpdateCtx
+	from pyplants.core.context import CtxField
 	from pyplants.core.base import BaseDiseaseWithPhenology
 	from pyplants.diseases.common import DiseaseEvent
 
 
 	class ThreeTen(BaseDiseaseWithPhenology):
 	   """Simple three-ten rule for downy mildew of the grape."""
-	   START_BBCH = 5
-	   END_BBCH = 75
-
-	   def __init__(self, phen_model):
-	      super().__init__(
-	         phen_model,
-	         (ThreeTen.START_BBCH, ThreeTen.END_BBCH))
+	   _model_meta = {
+	      "timestep": "d",
+	      "use_ctx_fields": {CtxField.TMEAN, CtxField.RAIN}
+	      "bbch_range": (5, 75)
+	   }
 
 	   def _update_imp(self, update_ctx: UpdateCtx):
 	      rain = update_ctx.rain
@@ -76,10 +81,6 @@ The rule of the three ten is a simple model to detect *downy mildew*. It is a da
 	      self._events.append(DiseaseEvent(
 	         dt=update_ctx.dt,
 	         infection=float(inf)))
-	
-	   @property
-	   def req_update_ctx_fields(self) -> Set[str]:
-	      return {"tmean", "rain"}
 
 If you want to use this model, you can simply create an instance of it and call the :code:`update` method. Moreover, since this basic model relies on knowing the plant's shoot length, a phenological model is needed to estimate the BBCH stage. Therefore, in this example, we instantiate the :class:`Iphen <pyplants.phenology.iphen.Iphen>` model and we pass it to the constructor.
 
@@ -122,3 +123,7 @@ These are the base classes that compose the core of the library.
 	:members:
 	:member-order: bysource
 	:private-members:
+
+.. autoclass:: pyplants.core.context.CtxField
+	:members:
+	:member-order: bysource

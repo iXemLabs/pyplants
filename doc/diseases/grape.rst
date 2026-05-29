@@ -5,6 +5,7 @@ In this module are grouped the disease models related to the grape. Currently, t
 
 * Powdery Mildew (PM)
 * Grey Mould (GM)
+* Downy Mildew (DM)
 
 Powdery Mildew
 --------------
