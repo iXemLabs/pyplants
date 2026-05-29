@@ -31,6 +31,8 @@ class Broome(BaseDiseaseWithPhenology):
         super().__init__(phen_model)
         # A leaf wetness counter
         self._leaf_wd = LeafWetnessCounter(dry_off=4)
+        # List of temperature during wet period
+        self._tmeans = []
 
     def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with hourly data.
@@ -41,11 +43,16 @@ class Broome(BaseDiseaseWithPhenology):
         self._leaf_wd.update(update_ctx.lw)
         # Check to be in a leaf wetness period
         if self._leaf_wd.value > 0:
-            t = update_ctx.tmean
+            # Accumulate the temperatures during wet period
+            self._tmeans.append(update_ctx.tmean)
+            # Compute the mean during wet period
+            t = sum(self._tmeans) / len(self._tmeans)
+            # Compute the Broome index using temperature and wetness hours
             w = self._leaf_wd.value
-            # Compute the Broome Index
             index = -2.647866 - (0.374927 * w) + (0.061601 * w * t) \
                 - (0.001511 * w * (t ** 2))
             index = exp(index)
             inf = index / (1 + index)
+        else:
+            self._tmeans.clear()
         self._events.append(DiseaseEvent(dt=update_ctx.dt, infection=inf))

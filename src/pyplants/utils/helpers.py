@@ -42,10 +42,8 @@ class LeafWetnessCounter(object):
             # Check for interruption of a wetness period
             if self._leaf_wd > 0:
                 self._dry_period += 1
-                # Check the current dry period to be less then dry off
-                if self._dry_period < self._dry_off:
-                    self._leaf_wd += 1
-                else:
+                # Reset the counter after dry off hours
+                if self._dry_period >= self._dry_off:
                     self._leaf_wd = 0
                     self._dry_period = 0
 
