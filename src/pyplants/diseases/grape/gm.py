@@ -5,6 +5,7 @@ from pyplants.core.context import UpdateCtx
 from pyplants.core.context import CtxField
 from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.common import DiseaseEvent
+from pyplants.diseases.common import GenericMagarey
 
 
 class Broome(BaseDiseaseWithPhenology):
@@ -56,3 +57,47 @@ class Broome(BaseDiseaseWithPhenology):
         else:
             self._tmeans.clear()
         self._events.append(DiseaseEvent(dt=update_ctx.dt, infection=inf))
+
+
+class GoFe(BaseDiseaseWithPhenology):
+    """González-Fernández risk periods model (GM).
+
+    Use hourly temperature and leaf wetness to compute:
+
+    * infection risk
+
+    This model is based on the Magarey model and operate differently during
+    flowering and ripening.
+    """
+    _model_meta = {
+        "timestep": "h",
+        "use_ctx_fields": {CtxField.TMEAN, CtxField.LW}
+    }
+
+    def __init__(self, phen_model):
+        """Init the model.
+
+        :param phen_model: a grape phenological model
+        """
+        super().__init__(phen_model)
+        # Flowering parameters
+        self._magarey_flowering = GenericMagarey((1, 25, 34), 1, 12, 13)
+        # Ripening parameters
+        self._magarey_ripening = GenericMagarey((10, 20, 35), 4, 10, 13)
+
+    def _update_imp(self, update_ctx: UpdateCtx):
+        """Update the model with hourly data.
+
+        :param update_ctx: update context with temperature and leaf wetness
+        """
+        infection = 0
+        magarey_model = None
+        if self._phen_model.scale.in_range(65, 68):
+            magarey_model = self._magarey_flowering
+        elif self._phen_model.scale.in_range(81, 89):
+            magarey_model = self._magarey_ripening
+        # Check if one of the two models has been selected
+        if magarey_model is not None:
+            magarey_model.update(update_ctx)
+            infection = int(magarey_model.has_infection)
+        self._events.append(DiseaseEvent(dt=update_ctx.dt, infection=infection))

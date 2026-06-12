@@ -161,3 +161,18 @@ class BBCHScale(object):
         if len(scale) > 0:
             return scale[-1].stage > stage
         return False
+
+    def in_range(self, start: int, end: int) -> bool:
+        """Check if the current stage falls between the given ones.
+
+        :param start: the initial stage
+        :param end: the ending stage
+        :raises ValueError: when start and end falls on different phases
+        :returns: True if the current stage is in range
+        """
+        s1 = BBCHStage(start)
+        s2 = BBCHStage(end)
+        # Check the two stages to be on the same phase
+        if s1.is_vegetative() != s2.is_vegetative():
+            raise ValueError("Invalid arguments: stages not in the same phase")
+        return self.has_started(start) and not self.has_ended(end)
