@@ -122,6 +122,17 @@ class BaseDisease(Model):
         """
         return self._events
 
+    def _is_in_infection_period(self):
+        """Check if we are currently in an infection period.
+
+        An infection period is a contiguous period where infection is detected.
+
+        :return: True if the last event was an infection
+        """
+        if len(self._events) == 0:
+            return False
+        return self._events[-1].infection > 0
+
 
 class BaseDiseaseWithPhenology(BaseDisease):
     """Base class for disease models that requires phenology data."""

@@ -57,6 +57,8 @@ class Plasmo(BaseDiseaseWithPhenology):
         :param update_ctx: update context with new data
         """
         inf = 0
+        # Rate of increase of inoculum
+        n = 75.69
         # Update rain and leaf wetness counter
         self._raind.append(update_ctx.rain)
         self._leaf_wd.update(update_ctx.lw)
@@ -67,11 +69,13 @@ class Plasmo(BaseDiseaseWithPhenology):
             raind = sum(self._raind)
             tmean = sum(self._tmeans) / len(self._tmeans)
             if raind > 8 and tmean >= 6 and tmean <= 26:
-                C_tw = gd_sum(self._tmeans)
-                f1 = 75.69 / C_tw
+                c_tw = gd_sum(self._tmeans)
+                f1 = n / c_tw
                 f2 = 1 / f1
-                if f2 >= 1:
-                    inf = 1
+                # We got infection risk for f2 grather the one
+                inf = f2 >= 1
+                # Add an infection if we are not already in an infection period
+                if inf and not self._is_in_infection_period():
                     self._inf_mng.add_infection(update_ctx.dt)
         else:
             self._tmeans.clear()
@@ -92,10 +96,13 @@ class Plasmo(BaseDiseaseWithPhenology):
         # Temperature and relative humidity thresholds
         TMIN, TMAX = 10, 34
         RHMIN = 30
+        # Rate of increase of incubation development
+        m = 0.097
         # Current measures
         tmean = update_ctx.tmean
         rhmean = update_ctx.rhmean
         if tmean >= TMIN and tmean <= TMAX and rhmean > RHMIN:
-            incp = ((4 * (tmean - TMIN) * (TMAX - tmean)) / (
-                (TMAX - TMIN) ** 2)) * 0.097 * (rhmean - RHMIN)
+            f3 = 4 * ((tmean - TMIN) * (TMAX - tmean)) / ((TMAX - TMIN) ** 2)
+            f4 = m * (rhmean - RHMIN)
+            incp = (f3 * f4) / 100
         return incp
