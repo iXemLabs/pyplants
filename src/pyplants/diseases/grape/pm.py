@@ -11,6 +11,8 @@ from pyplants.core.base import BaseDisease
 from pyplants.core.base import BaseDiseaseWithPhenology
 from pyplants.core.context import UpdateCtx
 from pyplants.core.context import CtxField
+from pyplants.utils import kdbeta
+from pyplants.utils import equiv_temp
 from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.common import DiseaseEvent
 from pyplants.diseases.common import InfectionManager
@@ -289,9 +291,9 @@ class Caffi(BaseDiseaseWithPhenology):
                 # Compute infection risk if conditions are met
                 if t >= 5 and t <= 31:
                     # Compute equivalent temperature (0-1)
-                    t_eq = (t - 5) / 26
+                    t_eq = equiv_temp(t, (5, 31))
                     # Evaluate infection risk
-                    inf = (7.391 * (t_eq ** 2.403) * (1 - t_eq)) ** 0.892
+                    inf = kdbeta(t_eq, 2.403, 0.892, 7.391)
                     inf = inf * exp(-0.221 * vpd_d)
                     # Evaluate colony on leaf
                     col = aol * inf

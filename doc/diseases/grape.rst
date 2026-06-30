@@ -1,7 +1,7 @@
 Grape
 =====
 
-In this module are grouped the disease models related to the grape. Currently, the following disease are supported:
+In this module the disease models related to the grape are grouped. Currently, the following disease are supported:
 
 * Powdery Mildew (PM)
 * Grey Mould (GM)
@@ -46,17 +46,29 @@ Following the details about each model.
 Grey Mould
 ----------
 
-The :code:`pyplants.diseases.grape.gm` module currently includes only one model to predict ascospore release events and infection events. The following table is a summary of the implemented models and the main features.
+The :code:`pyplants.diseases.grape.gm` module currently includes only three models to predict ascospore release events and infection events. The following table is a summary of the implemented models and the main features.
 
 ================  ========  =================  =========
 Model             Timestep  Ascospore Release  Infection
 ================  ========  =================  =========
 Broome [6]_       Hourly    No                 Yes
+GoFe [7]_         Hourly    No                 Yes
+GoDom [8]_        Daily     No                 Yes
 ================  ========  =================  =========
 
 Following the details about each model.
 
 .. autoclass:: pyplants.diseases.grape.gm.Broome
+	:show-inheritance:
+	:members:
+	:member-order: bysource
+
+.. autoclass:: pyplants.diseases.grape.gm.GoFe
+	:show-inheritance:
+	:members:
+	:member-order: bysource
+
+.. autoclass:: pyplants.diseases.grape.gm.GoDom
 	:show-inheritance:
 	:members:
 	:member-order: bysource
@@ -69,7 +81,7 @@ The :code:`pyplants.diseases.grape.dm` module currently includes only one model 
 ================  ========  =================  =========
 Model             Timestep  Ascospore Release  Infection
 ================  ========  =================  =========
-Plasmo [7]_       Hourly    No                 Yes
+Plasmo [9]_       Hourly    No                 Yes
 ================  ========  =================  =========
 
 Following the details about each model.
@@ -87,4 +99,6 @@ Following the details about each model.
 .. [4] Mills, W. D. (1944). Efficient use of sulfur dust and sprays during rain to control apple scab. NY State Agr. Expt. Sta., Ithaca. Ext. Bul, 630.
 .. [5] Caffi, T., Rossi, V., Legler, S. E., & Bugiani, R. (2011). A mechanistic model simulating ascosporic infections by Erysiphe necator, the powdery mildew fungus of grapevine. Plant Pathology, 60(3), 522-531
 .. [6] Broome, J. C., English, J. T., Marois, J. J., Latorre, B. A., & Aviles, J. C. (1995). Development of an infection model for Botrytis bunch rot of grapes based on wetness duration and temperature. Phytopathology, 85(1), 97-102
-.. [7] Orlandini, S., Gozzini, B., Rosa, M., Egger, E., Storchi, P., Maracchi, G., & Miglietta, F. (1993). Plasmo: a simulation model for control of plasmopara viticola on grapevine 1. EPPO Bulletin, 23(4), 619-626.
+.. [7] González-Fernández, E., Piña-Rey, A., Fernández-González, M., Aira, M. J., & Rodríguez-Rajo, F. J. (2020). Identification and evaluation of the main risk periods of Botrytis cinerea infection on grapevine based on phenology, weather conditions and airborne conidia. The Journal of Agricultural Science, 158(1-2), 88-98.
+.. [8] González-Domínguez, E., Caffi, T., Ciliberti, N., & Rossi, V. (2015). A mechanistic model of Botrytis cinerea on grapevines that includes weather, vine growth stage, and the main infection pathways. PloS one, 10(10), e0140444.
+.. [9] Orlandini, S., Gozzini, B., Rosa, M., Egger, E., Storchi, P., Maracchi, G., & Miglietta, F. (1993). Plasmo: a simulation model for control of plasmopara viticola on grapevine 1. EPPO Bulletin, 23(4), 619-626.

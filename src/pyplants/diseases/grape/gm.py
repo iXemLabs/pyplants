@@ -1,8 +1,11 @@
 from math import exp
+from collections import deque
 
 from pyplants.core.base import BaseDiseaseWithPhenology
 from pyplants.core.context import UpdateCtx
 from pyplants.core.context import CtxField
+from pyplants.utils import kdbeta
+from pyplants.utils import equiv_temp
 from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.common import DiseaseEvent
 from pyplants.diseases.common import GenericMagarey
@@ -101,3 +104,164 @@ class GoFe(BaseDiseaseWithPhenology):
             magarey_model.update(update_ctx)
             infection = int(magarey_model.has_infection)
         self._events.append(DiseaseEvent(dt=update_ctx.dt, infection=infection))
+
+
+class GoDom(BaseDiseaseWithPhenology):
+    """González-Domínguez mechanistic (GM).
+
+    Use daily temperature, rh and leaf wetness to compute:
+
+    * infection risk
+
+    This model accounts for conidia production on various inoculum sources and
+    for multiple infection pathways.
+    """
+    _model_meta = {
+        "timestep": "d",
+        "use_ctx_fields": {CtxField.RHMEAN, CtxField.TMEAN, CtxField.LW}
+    }
+
+    def __init__(self, phen_model):
+        """Initialize the model."""
+        super().__init__(phen_model)
+        # Temperatures for mycelial growth (°C)
+        self._T_MYGR = (0, 40)
+        # Temperature for sporulation (°C)
+        self._T_SPOR = (0, 35)
+        # Sliding window of 7 days to store parameters for conidia computation
+        self._ciso = deque(maxlen=7)
+
+    def _update_imp(self, update_ctx: UpdateCtx):
+        """Update the model with daily data.
+
+        Please note that some original formulas have been rewritten using the
+        Horner's method.
+
+        :param update_ctx: the update context with temperature and leaf wetness
+        """
+        rh = update_ctx.rhmean
+        lwd = update_ctx.lw
+        tmean = update_ctx.tmean
+        # Output variables
+        infection = 0
+        extra_fields = None
+        # Factor accounting for moisture
+        mf = update_ctx.lw / 24
+        # Compute the mycelium growth rate
+        teq = equiv_temp(tmean, self._T_MYGR)
+        mygr = mf * kdbeta(teq, 0.9, 0.475, 3.78)
+        # Compute the spore production rate
+        teq = equiv_temp(tmean, self._T_SPOR)
+        spor_1 = kdbeta(teq, 0.9, 10.49, 3.7)
+        spor_2 = -3.595 + (rh * (0.097 - (0.0005 * rh)))
+        spor = spor_1 * spor_2
+        # Store the product of spor and mygr in the queue
+        self._ciso.append(mygr * spor)
+        # The model behaves differently based on infection windows
+        if self._phen_model.scale.in_range(53, 73):
+            # Compute infection of the first window
+            infection, extra_fields = self.__get_inf_risk1(teq, lwd)
+        elif self._phen_model.scale.in_range(79, 89):
+            # Compute infection severity 2
+            inf2, _extra_fields2 = self.__get_inf_risk2(teq, lwd)
+            # Compute infection serverity 3
+            teq = equiv_temp(tmean, (0, 30))
+            inf3, _extra_fields3 = self.__get_inf_risk3(teq, lwd, rh, mygr)
+            # Store the infection as the sum
+            infection = inf2 + inf3
+            # Join the two extra fields and add singular infection risks
+            extra_fields = {**_extra_fields2, **_extra_fields3}
+            extra_fields["inf2"] = inf2
+            extra_fields["inf3"] = inf3
+        self._events.append(DiseaseEvent(
+            dt=update_ctx.dt, infection=infection, extra_fields=extra_fields))
+
+    def _get_growth_stage(self) -> int:
+        """Get reproductive growth stage.
+
+        :returns: the last bbch value of reproductive scale
+        """
+        if len(self._phen_model.scale.rscale) == 0:
+            return 0
+        return self._phen_model.scale.rscale[-1].stage.code
+
+    def _get_ciso(self) -> float:
+        """Compute the current conidia abundance.
+
+        :returns: the mean of the stored ciso parameters
+        """
+        if len(self._ciso) == 0:
+            return 0
+        return sum(self._ciso) / len(self._ciso)
+
+    def __get_inf_risk1(self, teq: float, lwd: int) -> float:
+        """Compute infection severity on inflorescences and young clusters.
+
+        :param teq: the equivalent temperature on 0° and 35°C
+        :param lwd: the leaf wetness duration in hours
+        :returns:
+            - risk - infection risk (0...1)
+            - extra_fields - additional parameters in a `dict`
+        """
+        gs = self._get_growth_stage() / 100
+        # Compute relative susceptibility
+        sus = 75.209 + (gs * (-390.33 + gs * (671.25 - (379.09 * gs))))
+        # Compute the infection rate
+        inf_rate = kdbeta(teq, 0.99, 0.71, 3.56)
+        inf_rate /= (1 + exp(1.85 - (0.19 * lwd)))
+        inf_rate *= sus
+        # Compute the relative infection severity
+        ciso = self._get_ciso()
+        risk = inf_rate * ciso
+        # Collect additional parameters
+        extra_fields = {"sus1": sus, "inf_rate1": inf_rate, "ciso": ciso}
+        return risk, extra_fields
+
+    def __get_inf_risk2(self, teq: float, lwd: int) -> float:
+        """Compute infection severity on ripening berries (conidial infection).
+
+        :param teq: the equivalent temperature on 0°C and 35°C
+        :param lwd: the leaf wetness duration in hours
+        :returns:
+            - risk - infection risk (0...1)
+            - extra_fields - additional parameters in a `dict`
+        """
+        gs = self._get_growth_stage()
+        # Compute relative susceptibility
+        sus = 5 * (10 ** -17) * exp(0.4219 * gs)
+        # Compute the infection rate
+        inf_rate = kdbeta(teq, 1.292, 0.469, 6.416)
+        inf_rate *= exp(-2.3 * exp(-0.048 * lwd))
+        inf_rate *= sus
+        # Compute the relative infection severity
+        ciso = self._get_ciso()
+        risk = inf_rate * ciso
+        # Collect additional parameters
+        extra_fields = {"sus2": sus, "inf_rate2": inf_rate, "ciso": ciso}
+        return risk, extra_fields
+
+    def __get_inf_risk3(self, teq: float, lwd: int, rh: float, mygr: float) -> float:
+        """Compute infection severity for berry-to-berry.
+
+        :param teq: the equivalent temperature on 0°C and 30°C
+        :param lwd: the leaf wetness duration in hours
+        :param rh: the relative humidity in percentage
+        :param mygr: the mycelium growth rate
+        :returns:
+            - risk - infection risk (0...1)
+            - extra_fields - additional parameters in a `dict`
+        """
+        gs = self._get_growth_stage()
+        # Compute the relative susceptibility
+        sus = (0.0546 * gs) - 3.87
+        sus = min(sus, 1)
+        # Compute the infection rate
+        rh /= 100
+        inf_rate = kdbeta(teq, 2.14, 0.469, 7.75)
+        inf_rate /= (1 + exp(35.36 - (40.26 * rh)))
+        inf_rate *= sus
+        # Compute the relative infection severity
+        risk = inf_rate * mygr
+        # Collect additional parameters
+        extra_fields = {"sus3": sus, "inf_rate3": inf_rate, "mygr": mygr}
+        return risk, extra_fields
