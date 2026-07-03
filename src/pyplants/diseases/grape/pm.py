@@ -127,7 +127,7 @@ class _MillsPM(object):
             for row in reader:
                 cls._instance._table.append({
                     "t": row[0],
-                    "risks": [int(risk) for risk in row[1:]]
+                    "risks": [round(risk / 3, 2) for risk in row[1:]]
                 })
         return cls._instance
 

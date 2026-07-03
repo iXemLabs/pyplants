@@ -32,10 +32,9 @@ class DiseaseEvent:
 
     def __str__(self):
         s = []
-        s.append("[%s]: spore release %.2f" % (
-            self.dt.strftime("%c"),
-            self.spore_release
-        ))
+        s.append("[%s]:" % self.dt.strftime("%c"))
+        if self.spore_release is not None:
+            s.append("spore release %.2f" % self.spore_release)
         if self.infection is not None:
             s.append("infection %.2f" % self.infection)
         return " ".join(s)
