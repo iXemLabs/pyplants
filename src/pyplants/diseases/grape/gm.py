@@ -1,4 +1,5 @@
 from math import exp
+from math import nan
 from collections import deque
 
 from pyplants.core.base import BaseDiseaseWithPhenology
@@ -144,7 +145,18 @@ class GoDom(BaseDiseaseWithPhenology):
         tmean = update_ctx.tmean
         # Output variables
         infection = 0
-        extra_fields = None
+        extra_fields = {
+            "mygr": nan,
+            "ciso": nan,
+            "sus1": nan,
+            "sus2": nan,
+            "sus3": nan,
+            "inf_rate1": nan,
+            "inf_rate2": nan,
+            "inf_rate3": nan,
+            "inf2": nan,
+            "inf3": nan
+        }
         # Factor accounting for moisture
         mf = update_ctx.lw / 24
         # Compute the mycelium growth rate
@@ -157,53 +169,42 @@ class GoDom(BaseDiseaseWithPhenology):
         spor = spor_1 * spor_2
         # Store the product of spor and mygr in the queue
         self._ciso.append(mygr * spor)
+        ciso = sum(self._ciso) / len(self._ciso)
+        # Update the extra fields
+        extra_fields.update(mygr=mygr, ciso=ciso)
         # The model behaves differently based on infection windows
         if self._phen_model.scale.in_range(53, 73):
             # Compute infection of the first window
-            infection, extra_fields = self.__get_inf_risk1(teq, lwd)
+            infection, sus1, inf_rate1 = self.__get_inf_risk1(teq, lwd, ciso)
+            extra_fields.update(sus1=sus1, inf_rate1=inf_rate1)
         elif self._phen_model.scale.in_range(79, 89):
             # Compute infection severity 2
-            inf2, _extra_fields2 = self.__get_inf_risk2(teq, lwd)
+            inf2, sus2, inf_rate2 = self.__get_inf_risk2(teq, lwd, ciso)
+            extra_fields.update(sus2=sus2, inf_rate2=inf_rate2)
             # Compute infection serverity 3
             teq = equiv_temp(tmean, (0, 30))
-            inf3, _extra_fields3 = self.__get_inf_risk3(teq, lwd, rh, mygr)
+            inf3, sus3, inf_rate3 = self.__get_inf_risk3(teq, lwd, rh, mygr)
+            extra_fields.update(sus3=sus3, inf_rate3=inf_rate3)
             # Store the infection as the sum
             infection = inf2 + inf3
-            # Join the two extra fields and add singular infection risks
-            extra_fields = {**_extra_fields2, **_extra_fields3}
+            # Add the single infection risk as additional parameters
             extra_fields["inf2"] = inf2
             extra_fields["inf3"] = inf3
         self._events.append(DiseaseEvent(
             dt=update_ctx.dt, infection=infection, extra_fields=extra_fields))
 
-    def _get_growth_stage(self) -> int:
-        """Get reproductive growth stage.
-
-        :returns: the last bbch value of reproductive scale
-        """
-        if len(self._phen_model.scale.rscale) == 0:
-            return 0
-        return self._phen_model.scale.rscale[-1].stage.code
-
-    def _get_ciso(self) -> float:
-        """Compute the current conidia abundance.
-
-        :returns: the mean of the stored ciso parameters
-        """
-        if len(self._ciso) == 0:
-            return 0
-        return sum(self._ciso) / len(self._ciso)
-
-    def __get_inf_risk1(self, teq: float, lwd: int) -> float:
+    def __get_inf_risk1(self, teq: float, lwd: int, ciso: float) -> float:
         """Compute infection severity on inflorescences and young clusters.
 
         :param teq: the equivalent temperature on 0° and 35°C
         :param lwd: the leaf wetness duration in hours
+        :param ciso: the current conidia abundance
         :returns:
             - risk - infection risk (0...1)
-            - extra_fields - additional parameters in a `dict`
+            - sus - the relative susceptibility (SUS1)
+            - inf_rate - the infection rate (INF1)
         """
-        gs = self._get_growth_stage() / 100
+        gs = self._phen_model.scale.get_last_stage("r").code / 100
         # Compute relative susceptibility
         sus = 75.209 + (gs * (-390.33 + gs * (671.25 - (379.09 * gs))))
         # Compute the infection rate
@@ -211,22 +212,21 @@ class GoDom(BaseDiseaseWithPhenology):
         inf_rate /= (1 + exp(1.85 - (0.19 * lwd)))
         inf_rate *= sus
         # Compute the relative infection severity
-        ciso = self._get_ciso()
         risk = inf_rate * ciso
-        # Collect additional parameters
-        extra_fields = {"sus1": sus, "inf_rate1": inf_rate, "ciso": ciso}
-        return risk, extra_fields
+        return risk, sus, inf_rate
 
-    def __get_inf_risk2(self, teq: float, lwd: int) -> float:
+    def __get_inf_risk2(self, teq: float, lwd: int, ciso: float) -> float:
         """Compute infection severity on ripening berries (conidial infection).
 
         :param teq: the equivalent temperature on 0°C and 35°C
         :param lwd: the leaf wetness duration in hours
+        :param ciso: the current conidia abundance
         :returns:
             - risk - infection risk (0...1)
-            - extra_fields - additional parameters in a `dict`
+            - sus - the relative susceptibility (SUS2)
+            - inf_rate - the infection rate (INF2)
         """
-        gs = self._get_growth_stage()
+        gs = self._phen_model.scale.get_last_stage("r").code
         # Compute relative susceptibility
         sus = 5 * (10 ** -17) * exp(0.4219 * gs)
         # Compute the infection rate
@@ -234,11 +234,8 @@ class GoDom(BaseDiseaseWithPhenology):
         inf_rate *= exp(-2.3 * exp(-0.048 * lwd))
         inf_rate *= sus
         # Compute the relative infection severity
-        ciso = self._get_ciso()
         risk = inf_rate * ciso
-        # Collect additional parameters
-        extra_fields = {"sus2": sus, "inf_rate2": inf_rate, "ciso": ciso}
-        return risk, extra_fields
+        return risk, sus, inf_rate
 
     def __get_inf_risk3(self, teq: float, lwd: int, rh: float, mygr: float) -> float:
         """Compute infection severity for berry-to-berry.
@@ -249,9 +246,10 @@ class GoDom(BaseDiseaseWithPhenology):
         :param mygr: the mycelium growth rate
         :returns:
             - risk - infection risk (0...1)
-            - extra_fields - additional parameters in a `dict`
+            - sus - the relative susceptibility (SUS3)
+            - inf_rate - the infection rate (INF3)
         """
-        gs = self._get_growth_stage()
+        gs = self._phen_model.scale.get_last_stage("r").code
         # Compute the relative susceptibility
         sus = (0.0546 * gs) - 3.87
         sus = min(sus, 1)
@@ -262,6 +260,4 @@ class GoDom(BaseDiseaseWithPhenology):
         inf_rate *= sus
         # Compute the relative infection severity
         risk = inf_rate * mygr
-        # Collect additional parameters
-        extra_fields = {"sus3": sus, "inf_rate3": inf_rate, "mygr": mygr}
-        return risk, extra_fields
+        return risk, sus, inf_rate

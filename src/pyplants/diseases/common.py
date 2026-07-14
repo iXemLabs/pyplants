@@ -30,6 +30,21 @@ class DiseaseEvent:
     # Additional field based on model internal logic
     extra_fields: Dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self):
+        """Disease event to standard python dict.
+
+        Provides additional benefits over using the `asdict` function since
+        the `extra_fields` are flattened in the resulting dictionary.
+
+        :returns: the disease event transformed as a dict
+        """
+        return {
+            "dt": self.dt,
+            "infection": self.infection,
+            "spore_release": self.spore_release,
+            **self.extra_fields
+        }
+
     def __str__(self):
         s = []
         s.append("[%s]:" % self.dt.strftime("%c"))

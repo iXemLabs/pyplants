@@ -134,6 +134,22 @@ class BBCHScale(object):
         # Progression require new stage to be appended
         scale.append(BBCHRecord(stage, dt))
 
+    def get_last_stage(self, main_phase: str) -> BBCHStage:
+        """Get the last reached stage on one of the two main phases.
+
+        :param main_phase: the main_phase to query (can be "v" or "r")
+        :returns: the `BBCHStage` if scale not started the code will be 0
+        """
+        if main_phase == "v":
+            _scale = self._vscale
+        elif main_phase == "r":
+            _scale = self._rscale
+        else:
+            raise ValueError("Unknown target main_phase provided.")
+        if len(_scale) == 0:
+            return BBCHStage(0)
+        return _scale[-1].stage
+
     def has_started(self, code: int) -> bool:
         """Check if a given stage (code) has been reached.
 
