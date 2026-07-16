@@ -7,7 +7,7 @@ from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.grape.pm import Moyer
 from pyplants.phenology.scales import BBCHStage
 
-from .utils import load_test_samples
+from tests.helpers import load_test_samples
 
 
 class BaseTest(unittest.TestCase):
