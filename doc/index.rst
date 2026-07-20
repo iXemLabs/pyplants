@@ -6,6 +6,9 @@
 PyPlants
 ========
 
+.. image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg
+   :target: https://github.com/iXemLabs/pyplants/blob/main/LICENSE
+
 PyPlants is a collection of disease and phenological models for plants. The main purpose of this library is to enable both developers and researchers to use models described in the scientific literature.
 
 PyPlants is designed with ease in mind, models implement a common software interface hiding the implementation details. Additionally, basic support to develop custom models is provided.

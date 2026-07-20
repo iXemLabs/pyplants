@@ -7,8 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'pyplants'
-copyright = '2025, Giovanni Colucci'
-author = 'Giovanni Colucci'
+copyright = '2026, iXemLabs'
+author = 'iXemLabs'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

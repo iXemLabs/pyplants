@@ -18,7 +18,7 @@ class Plasmo(BaseDiseaseWithPhenology):
 
     * infection risk as boolean
 
-    This module also compute the incubation period when infection occurs.
+    This module also compute the incubation period for primary infections.
     """
     _model_meta = {
         "timestep": "h",
@@ -44,7 +44,7 @@ class Plasmo(BaseDiseaseWithPhenology):
         # Leaf wetness counter
         self._leaf_wd = LeafWetnessCounter()
         # The infection manager to track primary infections
-        self._inf_mng = InfectionManager(Plasmo.__compute_inf_latency)
+        self._inf_mng = InfectionManager(Plasmo.__compute_inc_latency)
 
     @property
     def infections(self) -> List[Dict]:
@@ -85,8 +85,8 @@ class Plasmo(BaseDiseaseWithPhenology):
         self._inf_mng.update(update_ctx)
 
     @staticmethod
-    def __compute_inf_latency(update_ctx: UpdateCtx) -> float:
-        """Compute the infection latency progressive step.
+    def __compute_inc_latency(update_ctx: UpdateCtx) -> float:
+        """Compute the incubation latency progressive step.
 
         This method is intended to be used with the infection manager.
 

@@ -60,9 +60,9 @@ class InfectionManager(object):
 
     This class is intended to be used by models to keep track of
     primary infections. An infection is described by two dates: start and end,
-    and a latency parameter that describe the progression.
+    of incubation and a latency parameter that describe the progression.
 
-    The infection manager is model agnostic, in order to update the infection
+    The infection manager is model agnostic, in order to update the incubation
     latency an externally provided callable implementing the update strategy
     must be provided.
     """
@@ -70,7 +70,7 @@ class InfectionManager(object):
     def __init__(self, fn_update_lat: Callable[[UpdateCtx], float]):
         """Initialize the infection manager.
 
-        :param fn_update_lat: callable used to update infection latency
+        :param fn_update_lat: callable used to update incubation latency
         """
         self._infections = []
         self._fn_update_lat = fn_update_lat
@@ -97,7 +97,7 @@ class InfectionManager(object):
         """
         for infection in self._infections:
             if not infection["end"]:
-                # Update latency for infection using model provided formula
+                # Update incubation latency using model provided formula
                 infection["latency"] += self._fn_update_lat(update_ctx)
                 # Close infection when latency expires
                 if infection["latency"] >= 1:

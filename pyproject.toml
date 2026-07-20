@@ -6,11 +6,24 @@ build-backend = "setuptools.build_meta"
 name = "pyplants"
 version = "0.0.1"
 description = "A collection of phenological and disease models for plants"
-readme = "README.md"
+authors = [
+	{ name="iXemLabs", email="giovanni.colucci@polito.it" }
+]
 requires-python = ">= 3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research"
+]
+readme = "README.md"
+license = {text = "Apache-2.0"}
 
 [project.optional-dependencies]
 docs = ["sphinx"]
+
+[project.urls]
+Homepage = "https://github.com/iXemLabs/pyplants"
+Issues = "https://github.com/iXemLabs/pyplants/issues"
 
 [tool.setuptools]
 include-package-data = true
