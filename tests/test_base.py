@@ -7,7 +7,7 @@ from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.grape.pm import Moyer
 from pyplants.phenology.scales import BBCHStage
 
-from tests.helpers import load_test_samples
+from tests.helpers import load_test_dataset
 
 
 class BaseTest(unittest.TestCase):
@@ -54,7 +54,7 @@ class BaseTest(unittest.TestCase):
     def test_daily_updater(self):
         """Basic test for the daily updater helper."""
         daily_updater = DailyUpdater([])
-        samples = load_test_samples()
+        samples = load_test_dataset()
         # Update using the first day of the dataset
         for i in range(0, 24):
             daily_updater.update(samples[i])
