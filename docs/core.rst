@@ -6,33 +6,36 @@ If you want to contribute to the project, or you simply wants to use this librar
 Installation
 ------------
 
-For the moment, pyplants is not yet included in PyPi, therefore you need a source distribution (a *tar.gz* file) or a wheel. You can install it locally by using the following command:
+PyPlants is included in PyPI and can be installed using the following command:
 
 .. code-block:: console
 
-	(.venv) $ python -m pip install pyplants-x.y.z.tar.gz
+	$ python -m pip install pyplants
 
-Please change *x.y.z* with the provided package version. Alternatively, you can install pyplants in edit mode by running this command inside the root of the project:
+Contribute
+----------
+
+If you want to contribute, first clone the library and then install it in edit mode.
 
 .. code-block:: console
 
-	(.venv) $ python -m pip install -e .
+	$ python -m pip install -e .
 
 This method is suggested only if you are actively working to the package source code. If you want to build the package you can do it in this way.
 
 .. code-block:: console
 
-	(.venv) $ python -m build --sdist
+	$ python -m build
 
 Of course you need a properly set python build environment.
 
 Models architecture
 -------------------
 
-In pyplants two possible base models exists: :class:`BaseDisease <pyplants.core.base.BaseDisease>` for disease models and :class:`BasePhenology <pyplants.core.base.BasePhenology>` for phenology models. In general, a model is designed as a simple python class that inherit by one of the base classes. Regardless the type, concrete models must strictly follow the following schema:
+In pyplants a model is designed as a simple python class that inherit by one of the available base classes. :class:`BaseDisease <pyplants.core.base.BaseDisease>` is used for disease models, :class:`BasePhenology <pyplants.core.base.BasePhenology>` for phenology models. Regardless the type, concrete models must strictly follow the following schema:
 
 * provide a proper implementation for the :code:`_update_imp` method
-* define a class attribute :code:`_model_meta` as a standard dictionary
+* define a class attribute :code:`_model_meta` as a :code:`dict` with metadata regarding the model
 
 In the following table, the possible :code:`_model_meta` fields are reported.
 
@@ -53,7 +56,7 @@ Finally, models automatically check the :code:`UpdateCtx` validity: a :code:`Val
 Your first custom model
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The rule of the three ten is a simple model to detect *downy mildew*. It is a daily model that predicts primary infections when a simple empirical rule is met. Nowadays, it is considered a very outdated tool; however, it serves well to show how to write your custom model
+The rule of three ten is a simple model to detect *downy mildew* of the grape. It is a daily model that predicts primary infections when a simple empirical rule is met. Nowadays, it is considered a very outdated tool; however, it serves well to show how to write a custom model.
 
 .. code-block:: python
 

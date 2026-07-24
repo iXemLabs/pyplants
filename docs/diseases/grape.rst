@@ -10,18 +10,18 @@ In this module the disease models related to the grape are grouped. Currently, t
 Powdery Mildew
 --------------
 
-The :code:`pyplants.diseases.grape.pm` module currently includes four different models to predict ascospore release events and infection events. The following table is a summary of the implemented models and the main features.
+The :code:`pyplants.diseases.grape.pm` module currently includes four different models to predict ascospore release risk and infection risk. The following table is a summary of the implemented models and the main features.
 
-================  ========  =================  =========
-Model             Timestep  Ascospore Release  Infection
-================  ========  =================  =========
-Gadoury [1]_      Daily     Yes                Yes
-Moyer [2]_        Daily     Yes                No
-Davis [3]_        Hourly    Yes                No
-Caffi [5]_        Daily     Yes                Yes
-================  ========  =================  =========
+================  ========  =============  =========
+Model             Timestep  Spore Release  Infection
+================  ========  =============  =========
+Gadoury [1]_      Daily     Yes            Yes
+Moyer [2]_        Daily     Yes            No
+Davis [3]_ [4]_   Hourly    Yes            No
+Caffi [5]_        Daily     Yes            Yes
+================  ========  =============  =========
 
-Following the details about each model.
+The :code:`spore_release` field in :code:`DiseaseEvent` is used to report the ascospore release risk. Following the details about each model.
 
 .. autoclass:: pyplants.diseases.grape.pm.Gadoury
 	:show-inheritance:
@@ -46,15 +46,15 @@ Following the details about each model.
 Grey Mould
 ----------
 
-The :code:`pyplants.diseases.grape.gm` module currently includes only three models to predict ascospore release events and infection events. The following table is a summary of the implemented models and the main features.
+The :code:`pyplants.diseases.grape.gm` module currently includes only three models to predict the infection risk. The following table is a summary of the implemented models and the main features.
 
-================  ========  =================  =========
-Model             Timestep  Ascospore Release  Infection
-================  ========  =================  =========
-Broome [6]_       Hourly    No                 Yes
-GoFe [7]_         Hourly    No                 Yes
-GoDom [8]_        Daily     No                 Yes
-================  ========  =================  =========
+================  ========  =============  =========
+Model             Timestep  Spore Release  Infection
+================  ========  =============  =========
+Broome [6]_       Hourly    No             Yes
+GoFe [7]_         Hourly    No             Yes
+GoDom [8]_        Daily     No             Yes
+================  ========  =============  =========
 
 Following the details about each model.
 
@@ -76,13 +76,13 @@ Following the details about each model.
 Downy Mildew
 ------------
 
-The :code:`pyplants.diseases.grape.dm` module currently includes only one model to predict ascospore release events and infection events. The following table is a summary of the implemented models and the main features.
+The :code:`pyplants.diseases.grape.dm` module currently includes only one model to predict infection risk. The following table is a summary of the implemented models and the main features.
 
-================  ========  =================  =========
-Model             Timestep  Ascospore Release  Infection
-================  ========  =================  =========
-Plasmo [9]_       Hourly    No                 Yes
-================  ========  =================  =========
+================  ========  =============  =========
+Model             Timestep  Spore Release  Infection
+================  ========  =============  =========
+Plasmo [9]_       Hourly    No             Yes
+================  ========  =============  =========
 
 Following the details about each model.
 

@@ -1,0 +1,2 @@
+# Used by RTD to generate docs.
+Sphinx==7.1.2

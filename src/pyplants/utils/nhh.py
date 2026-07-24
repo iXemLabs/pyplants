@@ -24,9 +24,9 @@ class NHH(object):
     def __init__(self, tcmin, tcopt, tcmax):
         """Construct the instance for the NHH calculator.
 
-        :param tcmin: minimum temperature for plant activation
+        :param tcmin: minimum temperature for plant activity
         :param tcopt: optimum temperature for plant activity
-        :param tcmax: maximum temperature for plant activation
+        :param tcmax: maximum temperature for plant activity
         """
         if tcmin > tcopt or tcopt > tcmax:
             raise ValueError("Invalid cardinal temperature provided")

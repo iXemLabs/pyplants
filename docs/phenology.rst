@@ -3,7 +3,7 @@ Phenology
 
 Phenological models are used to predict growth stage of the crop. There are many models in the literature, but for  the moment, only one is implemented.
 
-In general, every phenology model in pyplants will use the BBCH scale as a common way to keep track of phenology growth stages [1]_. BBCH is composed by two scales: vegetative and reproductive. These two scales may occasionally overlap, for this reason they are separately stored.
+In general, every phenology model in pyplants will use the BBCH scale as a common way to keep track of phenology growth stages [1]_. BBCH is composed by two main phases: vegetative and reproductive. These two phases may occasionally overlap, for this reason they are separately stored.
 
 BBCH Scale
 ----------
@@ -31,7 +31,7 @@ Iphen
 
 Model for plants phenology based on [2]_. This model uses only hourly mean temperature and internally compute the *Normal Hour Heat (NHH)*, using three cardinal temperatures [3]_. 
 
-This implementation currently supports only grape plants.
+This implementation currently supports only grape plant.
 
 .. autoclass:: pyplants.phenology.iphen.Iphen
 	:show-inheritance:
