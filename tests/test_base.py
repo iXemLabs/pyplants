@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 
 from pyplants.core.context import UpdateCtx
+from pyplants.utils.mills import MillsTable, MillsRisk
 from pyplants.utils.helpers import DailyUpdater
 from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.grape.pm import Moyer
@@ -86,6 +87,43 @@ class BaseTest(unittest.TestCase):
         # Restart with one wet record
         lw.update(1)
         self.assertEqual(lw.value, 1)
+
+    def test_mills_tables(self):
+        """Test the mills table utility."""
+        mills = MillsTable("classic")
+        # Check out-of-range mean temperature
+        tmin = 4
+        tmax = 40
+        # In our classic mills table the range is 5, 25 °C
+        self.assertEqual(mills.get_risk(tmin, 10), 0)
+        self.assertEqual(mills.get_risk(tmax, 10), 0)
+        # Check some proper risk index
+        self.assertEqual(mills.get_risk(6, 26), 0.33)
+        self.assertEqual(mills.get_risk(8, 23), 0.67)
+        # Check out-of-range leaf wetness duration
+        self.assertEqual(mills.get_risk(6, 5), 0)
+        self.assertEqual(mills.get_risk(6, 60), 1)
+
+    def test_custom_mills(self):
+        """Test custom provided mills tables."""
+        # Check for an unknow table
+        with self.assertRaises(ValueError):
+            MillsTable("mills-test")
+        # Check for malformed table
+        with self.assertRaises(ValueError):
+            MillsTable("mills-test", [
+                {"typo": 10, "thresholds": []}
+            ])
+        # Build a proper table (dummy)
+        mills = MillsTable("mills-test", [
+            {"t": 10, "thresholds": [(25, MillsRisk.LOW)]},
+            {"t": 15, "thresholds": [(15, MillsRisk.MEDIUM)]}
+        ], save_in_registry=True)
+        self.assertEqual(mills.get_risk(10, 25), 0.33)
+        self.assertEqual(mills.get_risk(10, 30), 0.33)
+        # Init another mills-test from registry
+        mills2 = MillsTable("mills-test")
+        self.assertEqual(mills.get_risk(15, 15), mills2.get_risk(15, 15))
 
 
 if __name__ == "__main__":
