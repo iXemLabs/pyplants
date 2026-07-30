@@ -46,6 +46,7 @@ class MillsTable:
         :raises ValueError: unknown or malformed table
         """
         if table is not None:
+            self.__validate_table(table)
             _table = table
             if save_in_registry:
                 _MillsRegistry.add_table(name, table)
@@ -66,7 +67,7 @@ class MillsTable:
         risk = MillsRisk.NONE
         tmin = self.__table[0]["t"]
         tmax = self.__table[-1]["t"]
-        if t > tmin and t < tmax:
+        if t >= tmin and t <= tmax:
             # Get the nearest absolute temperature
             row = min(self.__table, key=lambda x: abs(x["t"] - t))
             # Get the risk checking the leaf wetness
@@ -76,6 +77,12 @@ class MillsTable:
                 else:
                     risk = threshold[1]
         return round(risk.value / 3, 2)
+
+    @staticmethod
+    def __validate_table(table: List[Dict]):
+        for entry in table:
+            if "t" not in entry or "thresholds" not in entry:
+                raise ValueError("Malformed entry in table")
 
 
 class _MillsRegistry:
@@ -107,10 +114,6 @@ class _MillsRegistry:
         """
         if name in cls._registry:
             raise ValueError("Double definition of mills table")
-        # Validate table format
-        for entry in table:
-            if "t" not in entry or "thresholds" not in entry:
-                raise ValueError("Malformed table provided")
         cls._registry[name] = table
 
     @classmethod
