@@ -1,11 +1,7 @@
-import csv
-
 from math import exp
 from math import isclose
 from typing import Dict
 from typing import List
-from bisect import bisect_right
-from importlib.resources import read_text
 
 from pyplants.core.base import BaseDisease
 from pyplants.core.base import BaseDiseaseWithPhenology
@@ -13,6 +9,7 @@ from pyplants.core.context import UpdateCtx
 from pyplants.core.context import CtxField
 from pyplants.utils import kdbeta
 from pyplants.utils import equiv_temp
+from pyplants.utils.mills import MillsTable
 from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.common import DiseaseEvent
 from pyplants.diseases.common import InfectionManager
@@ -105,52 +102,6 @@ class Moyer(BaseDisease):
             ))
 
 
-class _MillsPM(object):
-    """Mills table for PM prediction.
-
-    Singleton private implementation not to be directly used.
-    """
-    _instance = None
-
-    def __new__(cls):
-        """Constructor with singleton implementation."""
-        if cls._instance is None:
-            cls._instance = super(_MillsPM, cls).__new__(cls)
-            # Initialize the look up table only once
-            data = read_text("pyplants.data", "mills_pm.csv").splitlines()
-            reader = csv.reader(data, quoting=csv.QUOTE_NONNUMERIC)
-            # Store the wetness duration levels
-            columns = next(reader)
-            cls._instance._wet_durations = columns[1:]
-            # Store the risk level tables
-            cls._instance._table = []
-            for row in reader:
-                cls._instance._table.append({
-                    "t": row[0],
-                    "risks": [round(risk / 3, 2) for risk in row[1:]]
-                })
-        return cls._instance
-
-    def get_risk(self, t, lwd):
-        """Get the risk associated to provided values.
-
-        :param t: mean hourly temperature
-        :param lwd: consecutive leaf wetness duration (hours)
-        :returns: risk level (0,1,2,3)
-        """
-        if lwd >= self._wet_durations[0]:
-            # Check the temperature to be in range of mills table
-            min_t = self._table[0]["t"]
-            max_t = self._table[-1]["t"]
-            if t >= min_t and t <= max_t:
-                # Get the nearest absolute temperature
-                row = min(self._table, key=lambda x: abs(x["t"] - t))
-                # Search inside the wetness durations
-                pos = bisect_right(self._wet_durations, lwd)
-                return row["risks"][pos - 1]
-        return 0
-
-
 class DavisRI(BaseDiseaseWithPhenology):
     """Davis Risk Index model.
 
@@ -178,7 +129,7 @@ class DavisRI(BaseDiseaseWithPhenology):
         # Cumulative continuous leaf wetness duration
         self._leaf_wd = LeafWetnessCounter()
         # Mills table instance
-        self._mills_table = _MillsPM()
+        self._mills_table = MillsTable("davis")
 
     def _update_imp(self, update_ctx: UpdateCtx):
         """Update the model with hourly data.
