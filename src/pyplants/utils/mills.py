@@ -21,28 +21,27 @@ class MillsRisk(IntEnum):
 class MillsTable:
     """The mills table.
 
-    Can be initialized using either internal or custom data.
+    Users may defined a custom table by providing one in the table argument.
+    If :code:`save_in_registry` is set to True, the name must be unique, since
+    the provided table will be registered.
+
+    A custom table can be defined in the following way:
+
+    :code:`[{"t": 10, "thresholds": [(15, MillsRisk.LOW),...]}, ...]`
+
+    In case no table is provided, we try to load one from the built-in list,
+    currently we support the following tables:
+
+    * classic (apple scab)
+    * davis (grape powdery mildew)
     """
 
     def __init__(self, name: str, table: List[Dict] = None, save_in_registry=False):
         """Initialize a mills table.
 
-        Users may defined a custom table by providing one with the table
-        argument. If :code:`save_in_registry` is True, the name must be unique.
-
-        A custom table can be defined in the following way:
-
-        .. code-block:: python
-            [{"t": 10, "thresholds": [(15, MillsRisk.LOW),...]}, ...]
-
-        In case no table is provided, we try to load one from the built-in list,
-        currently we support the following tables:
-
-        * classic (apple scab)
-        * davis (grape powdery mildew)
-
         :param name: the name of the mills table
         :param table: the table as list of dict
+        :param save_in_registry: wether to save the table or not
         :raises ValueError: unknown or malformed table
         """
         if table is not None:

@@ -5,6 +5,7 @@
 }
 
 .py.class > .sig-object{
+	overflow-x: auto;
 	border-top: 1px solid #bbb;
 }
 
