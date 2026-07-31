@@ -101,6 +101,8 @@ class InfectionManager(object):
                 infection["latency"] += self._fn_update_lat(update_ctx)
                 # Close infection when latency expires
                 if infection["latency"] >= 1:
+                    # Cap the latency to 1 and store termination date
+                    infection["latency"] = 1
                     infection["end"] = update_ctx.dt
 
 

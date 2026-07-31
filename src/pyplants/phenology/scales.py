@@ -13,7 +13,7 @@ class BBCHStage(object):
 
         :raises ValueError: when an invalid BBCH code is provided
         """
-        if code <= 0 or code >= 99:
+        if code < 0 or code > 99:
             raise ValueError("BBCH stage code must be between 00 and 99")
         self._code = code
 
@@ -138,7 +138,8 @@ class BBCHScale(object):
         """Get the last reached stage on one of the two main phases.
 
         :param main_phase: the main_phase to query (can be "v" or "r")
-        :returns: the `BBCHStage` if scale not started the code will be 0
+        :raises ValueError: when providing an invalid main_phase
+        :returns: the last :code:`BBCHStage` or :code:`None` for empty rscale
         """
         if main_phase == "v":
             _scale = self._vscale
@@ -147,7 +148,10 @@ class BBCHScale(object):
         else:
             raise ValueError("Unknown target main_phase provided.")
         if len(_scale) == 0:
-            return BBCHStage(0)
+            if main_phase == "v":
+                return BBCHStage(0)
+            else:
+                return None
         return _scale[-1].stage
 
     def has_started(self, code: int) -> bool:

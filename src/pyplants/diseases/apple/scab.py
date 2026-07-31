@@ -1,4 +1,5 @@
 from pyplants.core.base import BasePhenology
+from pyplants.core.base import BaseDiseaseWithPhenology
 from pyplants.core.context import CtxField
 from pyplants.core.context import UpdateCtx
 from pyplants.utils.mills import MillsTable
@@ -6,7 +7,7 @@ from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.common import DiseaseEvent
 
 
-class MillsRI(object):
+class MillsRI(BaseDiseaseWithPhenology):
     """The classic mills risk model for apple.
 
     Use hourly mean temperature and leaf wetness to compute:
