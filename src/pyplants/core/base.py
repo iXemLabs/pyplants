@@ -87,6 +87,14 @@ class Model(ABC):
         """
         pass
 
+    @classmethod
+    def get_metadata(cls):
+        """Get the model metadata.
+
+        :returns: a copy of the model metadata dictionary
+        """
+        return cls._model_meta.copy()
+
 
 class BasePhenology(Model):
     """Base class for phenological model.
