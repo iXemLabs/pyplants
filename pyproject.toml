@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyplants"
-version = "0.1.0"
+version = "0.1.1"
 description = "A collection of phenological and disease models for plants"
 authors = [
 	{ name="iXemLabs", email="giovanni.colucci@polito.it" }
