@@ -56,7 +56,7 @@ class Plasmo(BaseDiseaseWithPhenology):
 
         :param update_ctx: update context with new data
         """
-        inf = 0
+        infection = 0
         # Rate of increase of inoculum
         n = 75.69
         # Update rain and leaf wetness counter
@@ -73,14 +73,16 @@ class Plasmo(BaseDiseaseWithPhenology):
                 f1 = n / c_tw
                 f2 = 1 / f1
                 # We got infection risk for f2 grather the one
-                inf = f2 >= 1
+                infection = f2 >= 1
                 # Add an infection if we are not already in an infection period
-                if inf and not self._is_in_infection_period():
+                if infection and not self._is_in_infection_period():
                     self._inf_mng.add_infection(update_ctx.dt)
         else:
             self._tmeans.clear()
         # Create a disease event with infection risk
-        self._events.append(DiseaseEvent(dt=update_ctx.dt, infection=inf))
+        self._events.append(DiseaseEvent(
+            dt=update_ctx.dt,
+            infection=float(infection)))
         # Update the possible infections
         self._inf_mng.update(update_ctx)
 
