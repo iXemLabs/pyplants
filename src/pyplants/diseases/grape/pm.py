@@ -200,7 +200,7 @@ class Caffi(BaseDiseaseWithPhenology):
         self._dd = 0
         # Overwintered chasmothecia
         self._och = och
-        self._inf_mng = InfectionManager(self.__compute_inc_latency)
+        self._inf_mng = InfectionManager(Caffi._compute_inc_latency)
 
     @property
     def infections(self) -> List[Dict]:
@@ -260,7 +260,7 @@ class Caffi(BaseDiseaseWithPhenology):
             self._inf_mng.update(update_ctx)
 
     @staticmethod
-    def __compute_inc_latency(update_ctx: UpdateCtx) -> float:
+    def _compute_inc_latency(update_ctx: UpdateCtx) -> float:
         """Incubation latency update strategy for Caffi.
 
         :param update_ctx: the current update context

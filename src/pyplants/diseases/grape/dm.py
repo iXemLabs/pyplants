@@ -44,7 +44,7 @@ class Plasmo(BaseDiseaseWithPhenology):
         # Leaf wetness counter
         self._leaf_wd = LeafWetnessCounter()
         # The infection manager to track primary infections
-        self._inf_mng = InfectionManager(Plasmo.__compute_inc_latency)
+        self._inf_mng = InfectionManager(Plasmo._compute_inc_latency)
 
     @property
     def infections(self) -> List[Dict]:
@@ -87,7 +87,7 @@ class Plasmo(BaseDiseaseWithPhenology):
         self._inf_mng.update(update_ctx)
 
     @staticmethod
-    def __compute_inc_latency(update_ctx: UpdateCtx) -> float:
+    def _compute_inc_latency(update_ctx: UpdateCtx) -> float:
         """Compute the incubation latency progressive step.
 
         This method is intended to be used with the infection manager.
