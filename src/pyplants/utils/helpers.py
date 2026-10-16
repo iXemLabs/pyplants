@@ -1,9 +1,13 @@
 from typing import List
 from typing import Tuple
 from typing import Optional
+from typing import TYPE_CHECKING
 from datetime import datetime
 
 from pyplants.core.context import UpdateCtx
+
+if TYPE_CHECKING:
+    from pyplants.core.base import Model
 
 
 class LeafWetnessCounter(object):
@@ -179,3 +183,65 @@ class DailyUpdater(object):
         _vmax = vmean if vmax is None else vmax
         _vmin = vmean if vmin is None else vmin
         return _vmin, _vmax, vmean
+
+
+class BulkUpdater(object):
+    """Bulk update models.
+
+    This utility simplifies the update of multiple models, different timestep
+    are supported. In general, it is suggested to not mix with this utility
+    phenological and disease models.
+    """
+
+    def __init__(self, models: List["Model"], timestep: str = "h"):
+        """Initialize the updater.
+
+        :param models: the list of  models to run
+        :param timestep: the target timestep for update context ("h" or "d")
+        :raise ValueError: when selected `timestep` is daily but an hourly
+            model is provided in the list `models`
+        """
+        self._h_models = []
+        self._d_models = []
+        self._d_updater = None
+        self._timestep = timestep
+        # Sort disease models in daily and hourly
+        for model in models:
+            if model.get_metadata()["timestep"] == "d":
+                self._d_models.append(model)
+            else:
+                self._h_models.append(model)
+        # Check for no hourly models in case the specified timestep in daily
+        if timestep == "d" and len(self._h_models) != 0:
+            raise ValueError("Hourly model can not run with daily data")
+        # Use the daily updater to easily update daily models
+        if timestep == "h" and len(self._d_models) != 0:
+            self._d_updater = DailyUpdater(self._d_models)
+
+    def update(self, update_ctx: UpdateCtx):
+        """Update the models in bulk.
+
+        :param update_ctx: the update context
+        :raise ValueError: when mismatching timestep in update context
+        """
+        if update_ctx.step != self._timestep:
+            raise ValueError("Mismatch timestep in update context")
+        # For daily timestep only daily models can run
+        if self._timestep == "d":
+            for model in self._d_models:
+                model.update(update_ctx)
+        # For hourly timestep update hourly model and daily
+        else:
+            for model in self._h_models:
+                model.update(update_ctx)
+            if self._d_updater is not None:
+                self._d_updater.update(update_ctx)
+
+    def finalize(self):
+        """Finalize the update.
+
+        You are supposed to call this method only in case you are using models
+        with daily timestep and hourly sampled data.
+        """
+        if self._d_updater is not None:
+            self._d_updater.finalize()
