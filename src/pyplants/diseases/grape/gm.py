@@ -9,7 +9,7 @@ from pyplants.utils import kdbeta
 from pyplants.utils import equiv_temp
 from pyplants.utils.helpers import LeafWetnessCounter
 from pyplants.diseases.common import DiseaseEvent
-from pyplants.diseases.common import GenericMagarey
+from pyplants.diseases.generic import GenericMagarey
 
 
 class Broome(BaseDiseaseWithPhenology):
