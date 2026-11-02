@@ -2,11 +2,12 @@ import unittest
 from datetime import datetime
 
 from pyplants.core.context import UpdateCtx
+from pyplants.utils.helpers import LeafWetnessCounter, DailyUpdater, BulkUpdater
+from pyplants.utils.plants import PlantEnum
 from pyplants.utils.mills import MillsTable, MillsRisk
-from pyplants.utils.helpers import DailyUpdater
-from pyplants.utils.helpers import LeafWetnessCounter
-from pyplants.diseases.grape.pm import Moyer
+from pyplants.diseases.grape.pm import Gadoury, Moyer, DavisRI
 from pyplants.phenology.scales import BBCHStage
+from pyplants.phenology.iphen import Iphen
 
 from tests.helpers import load_test_dataset
 
@@ -72,6 +73,27 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(daily_updater._daily_ctx.tmin, 7.45)
         self.assertEqual(daily_updater._daily_ctx.lw, 24)
         self.assertEqual(daily_updater._daily_ctx.rain, 6)
+
+    def test_bulk_updater(self):
+        """Basic test for bulk update utility."""
+        samples = load_test_dataset()
+        phen = Iphen.build_from_plant(PlantEnum.GRAPE, "BARBERA")
+        models = [Gadoury(phen), Moyer(), DavisRI(phen)]
+        # Check invalid init params
+        with self.assertRaises(ValueError):
+            BulkUpdater(models, timestep="d")
+        bulk = BulkUpdater(models, timestep="h")
+        # Check invalid update context
+        with self.assertRaises(ValueError):
+            uctx = UpdateCtx(dt=datetime(2026, 1, 1), step="d")
+            bulk.update(uctx)
+        # Update the models in bulk
+        for sample in samples:
+            bulk.update(sample)
+        bulk.finalize()
+        # Gadoury and DavisRI should not have any output yet
+        # but Moyer models does. Inspect the events length.
+        self.assertEqual(len(models[1].events), 2)
 
     def test_leaf_wetness_counter(self):
         """Test the leaf wetness counter."""
