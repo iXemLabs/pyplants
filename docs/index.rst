@@ -13,7 +13,7 @@ PyPlants
    :target: https://doi.org/10.1016/j.softx.2026.103062
 
 .. image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg
-   :target: https://github.com/iXemLabs/pyplants/blob/main/LICENSE 
+   :target: https://github.com/iXemLabs/pyplants/blob/main/LICENSE
 
 PyPlants is a collection of disease and phenological models for plants. The main purpose of this library is to enable both developers and researchers to use models described in the scientific literature.
 
@@ -21,6 +21,12 @@ PyPlants is designed with ease in mind, models implement a common software inter
 
 Getting Started
 ---------------
+
+PyPlants is included in PyPI and can be installed using the following command:
+
+.. code-block:: console
+
+   $ python -m pip install pyplants
 
 In this example, we use a simple ascospore prediction model for *powdery mildew* of the grape. To run a model, simply invoke the :code:`update` method passing the :code:`UpdateCtx` in input, a convenient data struct to hold agrometeorological data.
 
@@ -42,7 +48,7 @@ In this example, we use a simple ascospore prediction model for *powdery mildew*
       infection=None,
       extra_fields={'asc_p': 0.035371388525063274})
 
-The time step depends on the specific model, in this example, the selected model runs on a daily basis. Finally, each model exposes an events list containing the output computed during each update.
+The time step depends on the specific model, in this example, the selected model runs on a daily basis. Plant disease models exposes an events list containing the output computed during each update.
 
 .. topic:: Note
 
@@ -51,7 +57,7 @@ The time step depends on the specific model, in this example, the selected model
 .. toctree::
    :hidden:
    :maxdepth: 2
-   
+
    core
    diseases
    phenology

@@ -8,7 +8,7 @@ Magarey Model
 
 A generic implementation of the Magarey model [1]_, used to compute the amount of required leaf wetness hours for a disease to cause an infection.
 
-.. autoclass:: pyplants.diseases.common.GenericMagarey
+.. autoclass:: pyplants.diseases.generic.GenericMagarey
 	:members:
 	:member-order: bysource
 

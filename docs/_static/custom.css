@@ -16,3 +16,9 @@
 p.topic-title{
 	margin-top: 0px;
 }
+
+@media screen and (max-width: 875px) {
+  div.sphinxsidebar {
+  	width: auto;
+  }
+}
