@@ -1,10 +1,12 @@
 .py.class > .sig-object,
-.py.method > .sig-object{
+.py.method > .sig-object,
+.py.function > .sig-object{
 	padding: 2px;
 	background-color: #eee;
 }
 
-.py.class > .sig-object{
+.py.class > .sig-object,
+.py.function > .sig-object{
 	overflow-x: auto;
 	border-top: 1px solid #bbb;
 }
