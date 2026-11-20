@@ -55,17 +55,22 @@ class LeafWetnessCounter(object):
 class DailyUpdater(object):
     """Helper used to update daily models with hourly data.
 
-    You can use this class to automatically update multiple modules with a
-    daily timestep using hourly data. Since this helper performs a simple check
-    over the dates to identify day progressions, it is mandatory to manually
-    call the finalize method in order to correctly compute also the last date.
+    Use this class to automatically update multiple daily modules using hourly
+    data. Because it detects day transitions using a simple date check, you
+    must manually call the :code:`finalize` method to ensure the final
+    date is also computed.
     """
 
-    def __init__(self, models: List):
+    def __init__(self, models: List["Model"]):
         """Init the daily updater.
 
         :param models: a list of models with daily timestep
+        :raise ValueError: when at least a model with hourly timestep is
+            included in :code:`models`
         """
+        for model in models:
+            if model.get_metadata()["timestep"] == "h":
+                raise ValueError("Can not use models with hourly timestep")
         self._models = models
         self._daily_ctx = None
         self._nsamples = 0
@@ -188,7 +193,7 @@ class DailyUpdater(object):
 class BulkUpdater(object):
     """Bulk update models.
 
-    This utility simplifies the update of multiple models, different timestep
+    This utility simplifies the update of multiple models. Different timesteps
     are supported. In general, it is suggested to not mix with this utility
     phenological and disease models.
     """
@@ -217,6 +222,11 @@ class BulkUpdater(object):
         # Use the daily updater to easily update daily models
         if timestep == "h" and len(self._d_models) != 0:
             self._d_updater = DailyUpdater(self._d_models)
+
+    @property
+    def timestep(self):
+        """The target update timestep."""
+        return self._timestep
 
     def update(self, update_ctx: UpdateCtx):
         """Update the models in bulk.
